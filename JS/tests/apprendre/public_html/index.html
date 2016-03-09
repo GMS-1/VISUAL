@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>apprendre</title>
+        <meta charset="UTF-8">
+        <link rel="shortcut icon" href="">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <a href="test.html">#</a>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script>
+            /*
+    var x = d3.scale.ordinal().rangePoints([0, 100], 1),
+    y = {},
+    dragging = {};
+            
+  d3.csv("exemple.csv", function(d) {
+  return {
+    year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
+    make: d.Make,
+    model: d.Model,
+    length: +d.Length // convert "Length" column to number
+  };
+}, function(error, rows) {
+  console.log(rows[1]);
+});
+
+d3.csv("cars.csv", function(error, cars) {
+
+  // Extract the list of dimensions and create a scale for each.
+  x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
+        return d
+        && (y[d] = d3.scale.linear()
+        .domain(d3.extent(cars, function(p) { return +p[d];}))
+        .range([100, 0]));
+  })
+  );})
+  ,function(error, rows) {
+  console.log(row);
+}
+    ;*/
+    d3.csv("exemple.csv", function(error, data) {
+        /*d3.csv('exemple.csv', function(csv) {
+            csv.forEach(function(row) {
+                console.log(Object.keys(row));
+            });
+        });*/
+        var i=0;
+        while(data[i]!=="eof")
+        {
+            console.log(data[i]);
+            i++;
+        }
+        
+});
+
+        </script>
+    </body>
+</html>
