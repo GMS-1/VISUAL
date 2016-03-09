@@ -8,8 +8,7 @@ and open the template in the editor.
 <!DOCTYPE html>
 <meta charset="utf-8">
 <link rel="shortcut icon" href="">
-<style>
-
+<style>    
 svg {
   font: 10px sans-serif;
 }
@@ -42,14 +41,17 @@ svg {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   cursor: move;
 }
-
+            
 </style>
 <body>
+    
+    <p id="demo"></p>
+    
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
-
-var exclus;
 //define the size between 2 axes
+
+var columnname = [];
 var margin = {top: 30, right: 10, bottom: 10, left: 10},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
@@ -71,21 +73,47 @@ var svg = d3.select("body").append("svg")
   .append("g")
    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-//-----------------------------------------------------------------------------------------------------------------------
 
 d3.csv("cars.csv", function(error, cars) {
-
+        
   // Extract the list of dimensions and create a scale for each.
   x.domain(dimensions = d3.keys(cars[0]).filter(function(d) {
-      console.log(d);
-        return d!=="name"
-    
-                //gestion des colones -> num or NaN??
-         
+        
+        var column = d3.keys(cars[0]); //name of keys
+        var i=0;
+        var j=0;
+        var dataset = cars.map(function(d) { //in dataset is all the table
+        var colname = "[ " + d[column[0]];
+        for(i=1; i<column.length;i++) 
+            {
+                colname = colname + " ," +d[column[i]] ;
+            }
+        colname = colname + " ]";     
+          return colname;});
+          var datasetArray = dataset[0].split(','); //dataset[0] was a string, now it's an array that contains the labels -> "[ Label1", "Label2", ... , "LabelN ]"
+          datasetArray[0]=datasetArray[0].substring(2); //remove the [] at the beginnig and the end of the String (now : first and last item of the array)
+          datasetArray[column.length-1]=datasetArray[column.length-1].substring(0,datasetArray[column.length-1].length-2);
+        var NotANumber=[]; //contains name of Label for non numeric  column
+        var IsANumber=[];  //contains name of Label for numeric  column
+        
+        for (i=0; i<column.length; i++)
+        {
+        if(isNaN(datasetArray[i])===true){NotANumber[i]=column[i];}//fill 2 array with label that corespond to numeric a not numeric values
+        else{IsANumber[i]=column[i];}
+        }
+        var ListNotANumber;
+        ListNotANumber = d!==NotANumber[0];
+        for(i=1;i<NotANumber.length;i++)
+        {
+            ListNotANumber = ListNotANumber && d!==NotANumber[i];
+        }
+        return ListNotANumber
+        
         && (y[d] = d3.scale.linear()
         .domain(d3.extent(cars, function(p) { return +p[d];}))
         .range([height, 0]));
-  })); 
+  }));
+
   
   // Add grey background lines for context. line that we can see during the selection.
   background = svg.append("g")
@@ -187,60 +215,6 @@ function brush() {
     }) ? null : "none";
   });
 }
-
-function sansname(d)
-{ 
-    exclus = notaN();
-    console.log(exclus);
-    var f=d!==exclus;
-    return f;
-}
-
-
-function notaN (){
-    var i=0;
-    d3.csv("cars.csv", function(d) {
-  return {
-    name: d.name,
-    economy: d.economy,
-    cylinders: d.cylinders,
-    displacement: d.displacement,
-    power: d.power,
-    weight: d.weight,
-    mph: d.mph,
-    year: d.year
-  };
-}, function(error, rows) {
-   console.log(rows[0]);
-
-    if(isNaN(rows[0].displacement)===true)
-    {exclus=rows.displacement;}
-    
-    if(isNaN(rows[0].cylinders)===true)
-    {exclus=rows.cylinders;}
-    
-    if(isNaN(rows[0].name)===true)
-    {exclus=rows.name;}
-    
-    if(isNaN(rows[0].economy)===true)
-    {exclus=rows.economy;}
-    
-    if(isNaN(rows[0].power)===true)
-    {exclus=rows.power;}
-    
-    if(isNaN(rows[0].weight)===true)
-    {exclus=rows.weight;}
-    
-    if(isNaN(rows[0].mph)===true)
-    {exclus=rows.mph;}
-    
-    if(isNaN(rows[0].year)===true)
-    {exclus=rows.year;}
-}
-    );
-return exclus;
-}
-
 
 
 </script>
