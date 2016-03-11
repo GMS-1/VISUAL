@@ -7,6 +7,8 @@ and open the template in the editor.
 <html>
 <head>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<link rel="shortcut icon" href="">
 <style>
   #progress_bar {
     margin: 10px 0;
@@ -32,7 +34,8 @@ and open the template in the editor.
 <input type="file" id="files" name="file" />
 <button onclick="abortRead();">Cancel read</button>
 <div id="progress_bar"><div class="percent">0%</div></div>
-
+    <a href="index.html">index</a>
+    <a href="test.html">test</a>
 <script>
   var reader;
   var progress = document.querySelector('.percent');
@@ -89,7 +92,12 @@ and open the template in the editor.
       setTimeout("document.getElementById('progress_bar').className='';", 2000);
     }
 
-    // Read in the image file as a binary string.
+    // Read in the file as a binary string.
+    reader.onloadend = function () 
+    {
+    var csvfile = d3.csv.parse(reader.result);
+    var dataset = csvfile.map(function(d) { return [ +d["name"], +d["economy"] ];});
+    };
     reader.readAsBinaryString(evt.target.files[0]);
   }
 

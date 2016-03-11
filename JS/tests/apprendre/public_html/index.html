@@ -14,9 +14,20 @@ and open the template in the editor.
     <body>
         <a href="test.html">test</a>
         <a href="dragdrop.html">dragdrop</a>
+        <a href="grid.html">grid</a>
         <script src="http://d3js.org/d3.v3.min.js"></script>
         <script>
-            /*
+        /*d3.csv("exemple.csv", function(d) {
+  return {
+    year: new Date(+d.Year, 0, 1), // convert "Year" column to Date
+    make: d.Make,
+    model: d.Model,
+    length: +d.Length // convert "Length" column to number
+  };
+}, function(error, rows) {
+  console.log(rows);
+});
+            
     var x = d3.scale.ordinal().rangePoints([0, 100], 1),
     y = {},
     dragging = {};
@@ -61,6 +72,31 @@ d3.csv("cars.csv", function(error, cars) {
         
 });;*/
 
+
+    function csvJSON(csv){
+
+  var lines=csv.split("\n");
+
+  var result = [];
+
+  var headers=lines[0].split(",");
+
+  for(var i=1;i<lines.length;i++){
+
+	  var obj = {};
+	  var currentline=lines[i].split(",");
+
+	  for(var j=0;j<headers.length;j++){
+		  obj[headers[j]] = currentline[j];
+	  }
+
+	  result.push(obj);
+
+  }
+  
+  //return result; //JavaScript object
+  return JSON.stringify(result); //JSON
+}
         </script>
     </body>
 </html>
