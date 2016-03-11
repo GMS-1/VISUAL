@@ -35,12 +35,10 @@ var e_rfndmeextid = '';
     <div id="jqGridPager"></div>
 
     <script type="text/javascript"> 
-        var column = [];
-        d3.csv("cars.csv")
-          .row(function(d) { return {key: d.name, value1: +d.economy}; })
+        d3.csv("age.csv")
+          .row(function(d) { return {key: +d.year, value1: +d.age}; })
           .get(function(error, rows) {
-              
-      var data;
+
           var list = JSON.stringify(rows);
           
         $(document).ready(function () {
@@ -50,7 +48,6 @@ var e_rfndmeextid = '';
                 colModel: [
 					{ label: 'Name', name: 'key', width: 75 },
 					{ label: 'Product Name', name: 'value1', width: 90 },
-					{ label: 'Country', name: 'Country', width: 100 },
 					{ label: 'Price', name: 'Price', width: 80, sorttype: 'integer' },
 					// sorttype is used only if the data is loaded locally or loadonce is set to true
 					{ label: 'Quantity', name: 'Quantity', width: 80, sorttype: 'number' }                   
