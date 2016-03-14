@@ -12,14 +12,12 @@ and open the template in the editor.
 svg {
   font: 10px sans-serif;
 }
-
 .background path {
   fill: none;
   stroke: #eee;
   stroke-opacity : 0,2;
   shape-rendering: crispEdges;
 }
-
 .foreground path {
   fill: none;
 }
@@ -29,19 +27,16 @@ svg {
   stroke: #fff;
   shape-rendering: crispEdges;
 }
-
 .axis line,
 .axis path {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
-
 .axis text {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
   cursor: move;
 }
-
   #progress_bar {
     margin: 10px 0;
     padding: 3px;
@@ -98,63 +93,51 @@ var columnname = [];
 var margin = {top: 30, right: 10, bottom: 10, left: 10},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
-
 //intervqle is drawn 
 var x = d3.scale.ordinal().rangePoints([0, width], 1),
     y = {},
     dragging = {};
-
 var line = d3.svg.line(), //graphic
     axis = d3.svg.axis().orient("left"), //axes + legende
     background,
     foreground;
-
 //bloc "axe + margin arround the bloc"
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 function position(d) {
   var v = dragging[d];
   return v == null ? x(d) : v;
 }
-
 function transition(g) {
   return g.transition().duration(500);
 }
-
 // Returns the path for a given data point.
 function path(d) {
   return line(dimensions.map(function(p) { return [position(p), y[p](d[p])]; }));
 }
-
 function brushstart() {
   d3.event.sourceEvent.stopPropagation();
 }
-
 // Handles a brush event, toggling the display of foreground lines.
 function brush() {
-  var actives = dimensions.filter(function(p) { return !y[p].brush.empty();}),
-      extents = actives.map(function(p) { return y[p].brush.extent(); });
-      console.log(extents);
-  foreground.style("display", function(d) {
-    return actives.every(function(p, i) {
+    //extents is an array that contain min and max value of a label, the label is contained in actives
+  var actives = dimensions.filter(function(p) { return !y[p].brush.empty();}); //on peut remplacer ici par un array de mots
+  var extents = [[314, 407]];// = actives.map(function(p) {return y[p].brush.extent(); });  //on peut remplacer par des veleurs[[314, 407],[100, 150]];
+        foreground.style("display", function(d) {
+    return actives.every(function(p, i) {console.log(extents[i][1]);
       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
     }) ? null : "none";
   });
 }
-
-
 ////////////////////////////////////////////////////////////////
 var reader;
   var progress = document.querySelector('.percent');
-
   function abortRead() {
     reader.abort();
   }
-
   function errorHandler(evt) {
     switch(evt.target.error.code) {
       case evt.target.error.NOT_FOUND_ERR:
@@ -169,7 +152,6 @@ var reader;
         alert('An error occurred reading this file.');
     };
   }
-
   function updateProgress(evt) {
     // evt is an ProgressEvent.
     if (evt.lengthComputable) {
@@ -181,12 +163,12 @@ var reader;
       }
     }
   }
-
   function handleFileSelect(evt) {
+      
+    var tableFilter;
     // Reset progress indicator on new file selection.
     progress.style.width = '0%';
     progress.textContent = '0%';
-
     reader = new FileReader();
     reader.onerror = errorHandler;
     reader.onprogress = updateProgress;
@@ -204,7 +186,6 @@ var reader;
       progress.textContent = '100%';
       setTimeout("document.getElementById('progress_bar').className='';", 2000);
     };
-
     // Read in the file as a binary string.
     reader.onloadend = function () 
     {
@@ -239,15 +220,20 @@ var reader;
                 colModel: colModelList,
 		loadonce: true,
                 multiSort: true,
+                multisearch: true,
                 deselectAfterSort: true,
                 multipleSearch:true,
                 width: width,
                 height: 200,
                 rowNum: 150,
                 multiselect:true,
-                pager: "#jqGridPager"
+                pager: "#jqGridPager",
+                loadComplete: function()
+                {
+                    tableFilter = $(this).getGridParam("postData").filters;
+                    
+                }
             });
-            
         datasetArray[0]=datasetArray[0].substring(2); //remove the [] at the beginnig and the end of the String (now : first and last item of the array)
           datasetArray[column.length-1]=datasetArray[column.length-1].substring(0,datasetArray[column.length-1].length-2);
         var NotANumber=[]; //contains name of Label for non numeric  column
@@ -265,31 +251,20 @@ var reader;
             ListNotANumber = ListNotANumber && d!==NotANumber[i];
         }
         return ListNotANumber
-
         
         && (y[d] = d3.scale.linear()
         .domain(d3.extent(csvfile, function(p) { return +p[d];}))
         .range([height, 0]));
   }));
   $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false});
+  $("#jqGrid").jqGrid('navGrid','#jqGridPager',{add:false,edit:false,del:false,search:true,refresh:true},{},{},{},{multipleSearch:true,overlay:false});
 
-
-
-//jQuery("#jqGrid").searchGrid('searchGrid', {multipleSearch: true, recreateFilter: true});
-
-
-
-
-
-
-  // Add grey background lines for context. line that we can see during the selection.
   background = svg.append("g")
       .attr("class", "background")
     .selectAll("path")
       .data(csvfile)
     .enter().append("path")
       .attr("d", path);
-
       var color = d3.scale.category20b();
   // Add blue foreground lines for focus. Over the grey one, disappear when selection.
   foreground = svg.append("g")
@@ -299,7 +274,6 @@ var reader;
     .enter().append("path")
       .attr("d", path)
       .attr("stroke", "steelblue");
-
   // Add a group element for each dimension. Change the column order
   var g = svg.selectAll(".dimension")
       .data(dimensions)
@@ -330,7 +304,6 @@ var reader;
               .duration(0)
               .attr("visibility", null);
         }));
-
   // Add an axis and title.
   g.append("g")
       .attr("class", "axis")
@@ -339,8 +312,8 @@ var reader;
       .style("text-anchor", "middle")
       .attr("y", -9)
       .text(function(d) { return d; });
-
   // Add and store a brush for each axis.
+  
   g.append("g")
       .attr("class", "brush")
       .each(function(d) {
@@ -352,7 +325,6 @@ var reader;
     };
     reader.readAsBinaryString(evt.target.files[0]);
   }
-
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
 </script>
 
