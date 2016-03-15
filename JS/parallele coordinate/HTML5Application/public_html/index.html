@@ -121,17 +121,7 @@ function path(d) {
 function brushstart() {
   d3.event.sourceEvent.stopPropagation();
 }
-// Handles a brush event, toggling the display of foreground lines.
-function brush() {
-    //extents is an array that contain min and max value of a label, the label is contained in actives
-  var actives = dimensions.filter(function(p) { return !y[p].brush.empty();}); //on peut remplacer ici par un array de mots
-  var extents = [[314, 407]];// = actives.map(function(p) {return y[p].brush.extent(); });  //on peut remplacer par des veleurs[[314, 407],[100, 150]];
-        foreground.style("display", function(d) {
-    return actives.every(function(p, i) {console.log(extents[i][1]);
-      return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-    }) ? null : "none";
-  });
-}
+
 ////////////////////////////////////////////////////////////////
 var reader;
   var progress = document.querySelector('.percent');
@@ -165,7 +155,6 @@ var reader;
   }
   function handleFileSelect(evt) {
       
-    var tableFilter;
     // Reset progress indicator on new file selection.
     progress.style.width = '0%';
     progress.textContent = '0%';
@@ -189,6 +178,42 @@ var reader;
     // Read in the file as a binary string.
     reader.onloadend = function () 
     {
+        
+        // Handles a brush event, toggling the display of foreground lines.
+    function brush() {
+        
+        //extents is an array that contain min and max value of a label, the label is contained in actives
+      var actives = dimensions.filter(function(p) { return !y[p].brush.empty();}); //on peut remplacer ici par un array de mots    
+      var extents = actives.map(function(p) {return y[p].brush.extent(); });  //on peut remplacer par des veleurs[[314, 407],[100, 150]];
+      console.log(extents);
+      var actives= String(actives);
+      actives=actives.split(","); //creating an arry to add elements from tableFilter
+      
+    /*  var Filter = Gathered(5);
+        if (Filter!== undefined)
+        {
+            Filter = JSON.parse(Filter);
+            actives.push(Filter.rules[0].field);            
+        }
+      */
+      
+      
+            foreground.style("display", function(d) {
+        return actives.every(function(p, i) {
+          return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+        }) ? null : "none";
+      });
+    }
+    
+    function Gathered(tableFilter)
+    {
+        if (tableFilter !== 5)
+        {
+            Filter = tableFilter;
+        }
+        return Filter;
+    }
+    
     var csvfile = d3.csv.parse(reader.result);
   // Extract the list of dimensions and create a scale for each.
   x.domain(dimensions = d3.keys(csvfile[0]).filter(function(d) {
@@ -228,12 +253,14 @@ var reader;
                 rowNum: 150,
                 multiselect:true,
                 pager: "#jqGridPager",
-                loadComplete: function()
+                loadComplete: function getFilter()
                 {
-                    tableFilter = $(this).getGridParam("postData").filters;
+                    var tableFilter = $("#jqGrid").getGridParam("postData").filters;
                     
-                }
-            });
+                    return Gathered(tableFilter);
+                } 
+            });            
+            
         datasetArray[0]=datasetArray[0].substring(2); //remove the [] at the beginnig and the end of the String (now : first and last item of the array)
           datasetArray[column.length-1]=datasetArray[column.length-1].substring(0,datasetArray[column.length-1].length-2);
         var NotANumber=[]; //contains name of Label for non numeric  column
@@ -328,17 +355,6 @@ var reader;
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
 </script>
 
-<!--
-<input id="search" list="items" name=search placeholder="search"/>
-<datalist id="items">
-  <option value="economy">
-  <option value="cylinders">
-  <option value="dsiplacement">
-  <option value="power">
-  <option value="weight">
-  <option value="0-60 mph">
-  <option value="year">
-</datalist>  -->
 <table id="jqGrid"></table>
 <div id="jqGridPager"></div>
 
