@@ -175,11 +175,12 @@ var reader;
       setTimeout("document.getElementById('progress_bar').className='';", 2000);
     };
     // Read in the file as a binary string.
-    var Filter;
+    var FilterTable=[];
+    var FilterChart=[];
+    var FilterGlob=[];
         
     reader.onloadend = function () 
     {
-        
         // Handles a brush event, toggling the display of foreground lines.
     function brush() {
         //extents is an array that contain min and max value of a label, the label is contained in actives
@@ -195,58 +196,28 @@ var reader;
       {
           actives.shift();
       }
-
-      var search= [];
       
-      
-      for (i=0; i<actives.length; i++)
-      {     
-          var rule = new Object;
-          rule.field=actives[i];
-          rule.op="le";
-          rule.data=extents[i][1];
-          search.push(rule);
-      }     
-
-      for (i=0; i<actives.length; i++)
-      {     
-          var rule = new Object;
-          rule.field=actives[i];
-          rule.op="ge";
-          rule.data=extents[i][0];
-          search.push(rule);
-      }  
-      
-      $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
+        Gathered([actives, extents], "chart");
+        actives=[];
+        extents=[];
+        for (var i=0 ; i<FilterGlob.length; i++)
         {
-          filters: JSON.stringify
-          ({
-              groupOp: "AND",
-              rules: search
-          })
-       });
-
-        if (Filter!== undefined)
-        {
-            Filter = JSON.parse(Filter);
-                for (var i=0 ; i<Filter.rules.length; i++)
-                {
-                    actives.push(Filter.rules[i].field);
-                    switch(Filter.rules[i].op) 
-                    {
-                        case "eq":
-                            extents.push([parseInt(Filter.rules[i].data), parseInt(Filter.rules[i].data)]);
-                            break;
-                        case "le":
-                            extents.push([min, parseInt(Filter.rules[i].data)]);
-                            break;
-                        case "ge":
-                            extents.push([parseInt(Filter.rules[i].data), max]); 
-                            break;
-                    }
-                }
-        }       
-      
+            actives.push(FilterGlob[i].field);
+            switch(FilterGlob[i].op) 
+            {
+                case "eq":
+                    extents.push([parseInt(FilterGlob[i].data), parseInt(FilterGlob[i].data)]);
+                    break;
+                case "le":
+                    extents.push([min, parseInt(FilterGlob[i].data)]);
+                    break;
+                case "ge":
+                    extents.push([parseInt(FilterGlob[i].data), max]); 
+                    break;
+            }
+        }
+    
+      console.log(FilterGlob);
         if (actives.length===0) //when selection on chart is over (length because if selection by table, it's in second place, after "")
            {foreground.style("display", "initial");} //show everything
       foreground.style("display", function(d) { //select the good lines to color them
@@ -254,22 +225,76 @@ var reader;
           return extents[i][0] <= d[p] && d[p] <= extents[i][1];
         }) ? null : "none";
       });
-       
-        $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');
     }
     
-    function Gathered(tableFilter)
+    
+    
+    function Gathered(dataFilter, source) //gathered filter from the different elements of the dashboard -> separately and then gathered in a global variable
     {
-        Filter = tableFilter;
+        if (source === "table")
+        {
+            FilterTable=[];
+            if (dataFilter!==undefined)
+            {
+                dataFilter = JSON.parse(dataFilter);
+                for (i=0; i<dataFilter.rules.length; i++)
+                {
+                    var rule = new Object;
+                    rule.field=dataFilter.rules[0].field;
+                    rule.op=dataFilter.rules[0].op;
+                    rule.data=parseInt(dataFilter.rules[0].data);
+                    FilterTable.push(rule);
+                }
+            }
+        }
+        if (source === "chart")
+        {
+            FilterChart=[];
+            for (i=0; i<dataFilter[0].length; i++)
+            {     
+                var rule = new Object;
+                rule.field=dataFilter[0][i];
+                rule.op="le";
+                rule.data=dataFilter[1][i][1];
+                FilterChart.push(rule);
+            }     
+
+            for (i=0; i<dataFilter[0].length; i++)
+            {     
+                var rule = new Object;
+                rule.field=dataFilter[0][i];
+                rule.op="ge";
+                rule.data=dataFilter[1][i][0];
+                FilterChart.push(rule);
+            }  
+        }
+        FilterGlob=[];
+        for (i=0; i<FilterChart.length;i++){FilterGlob.push(FilterChart[i]);}
+        for (i=0; i<FilterTable.length;i++){FilterGlob.push(FilterTable[i]);}
+        if (source==="table" && isReady){brush();}
+        if (source==="brush") //--------------------------------------------------------------------------------------------
+        {
+            $("#jqGrid").jqGrid("getGridParam", "postData"),
+                {
+                    filters: JSON.stringify
+                    ({
+                        groupOp: "AND",
+                        rules: FilterGlob
+                    })
+                };
+            $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');
+        }
     }
+    
     
     var csvfile = d3.csv.parse(reader.result);
 
     var isReady = false;
-        function getReady()
-        {
-            return isReady;
-        }
+    
+    function getReady()
+    {
+        return isReady;
+    }
         
     var max=0;
     var min=0;
@@ -355,12 +380,7 @@ var reader;
                 loadComplete: function()
                 {         
                     var tableFilter = $("#jqGrid").getGridParam("postData").filters;
-                    Gathered(tableFilter);
-                    if (getReady()===true)
-                    {
-                        brush();
-                    }
-                    return Gathered(tableFilter);
+                    Gathered(tableFilter, "table");
                 } 
             }); 
         
@@ -426,8 +446,7 @@ var reader;
         .on("dragend", function(d) {  //d= nom de l'axe 
           if (dragging[d]===940)
           {
-              foreground.attr("d", path)
-                      .attr("visibility", null);
+             foreground.attr("class", "delete");
           }
           else
           {
@@ -442,6 +461,7 @@ var reader;
                 .attr("visibility", null);
           }
         }));
+        
   // Add an axis and title
   g.append("g")
       .attr("class", "axis")
