@@ -178,16 +178,16 @@ var reader;
     var FilterChart=[];
     var FilterGlob=[];
         
-    reader.onloadend = function () 
+    reader.onloadend = function start() 
     {
         // Handles a brush event, toggling the display of foreground lines.
     function brush() {
         //extents is an array that contain min and max value of a label, the label is contained in actives
-      var actives = dimensions.filter(function(p) //on peut remplacer ici par un array de mots
+      var actives = dimensions.filter(function(p)
       { 
           return !y[p].brush.empty();
       }); 
-      var extents = actives.map(function(p) {return y[p].brush.extent(); });  //on peut remplacer par des veleurs[[314, 407],[100, 150]];
+      var extents = actives.map(function(p) {return y[p].brush.extent(); }); 
       var actives= String(actives);
       actives=actives.split(","); //creating an arry to add elements from tableFilter
       
@@ -195,12 +195,12 @@ var reader;
       {
           actives.shift();
       }
-      
-      sendDataFilter([actives, extents], "chart");
+        sendDataFilter([actives, extents], "chart");
         if(lastSource==="chart")
         {   
             reload("table");
         }
+        
         actives=[];
         extents=[];
         for (var i=0 ; i<FilterGlob.length; i++)
@@ -209,13 +209,13 @@ var reader;
             switch(FilterGlob[i].op) 
             {
                 case "eq":
-                    extents.push([parseInt(FilterGlob[i].data), parseInt(FilterGlob[i].data)]);
+                    extents.push([parseFloat(FilterGlob[i].data), parseFloat(FilterGlob[i].data)]);
                     break;
                 case "le":
-                    extents.push([min, parseInt(FilterGlob[i].data)]);
+                    extents.push([min, parseFloat(FilterGlob[i].data)]);
                     break;
                 case "ge":
-                    extents.push([parseInt(FilterGlob[i].data), max]); 
+                    extents.push([parseFloat(FilterGlob[i].data), max]); 
                     break;
             }
         }
@@ -245,8 +245,20 @@ var reader;
                     var rule = new Object;
                     rule.field=dataFilter.rules[i].field;
                     rule.op=dataFilter.rules[i].op;
-                    rule.data=parseInt(dataFilter.rules[i].data);
+                    rule.data=parseFloat(dataFilter.rules[i].data);
                     FilterTable.push(rule);
+                }
+            }
+            
+            for(var i=0; i<FilterTable.length; i++)
+            {
+                for (var j=0; j<FilterChart.length; j++)
+                {
+                    if (FilterTable[i].field===FilterChart[j].field && FilterTable[i].op===FilterChart[j].op && FilterTable[i].data===FilterChart[j].data)
+                    {
+                        FilterTable.splice(i, 1);
+                        i=0;j=0;
+                    }
                 }
             }
         }
@@ -282,7 +294,7 @@ var reader;
         
     function reload(source)
     {
-        if (source==="chart" && isReady){brush();}
+        if (source==="chart"){brush();}
         if (source==="table")
         {
             $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
@@ -295,6 +307,15 @@ var reader;
             });
         $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');
         }
+    }
+    
+    function reset()
+    {
+        FilterGlob=[];
+        FilterTable=[];
+        FilterChart=[];
+        d3.selectAll("g > *").remove();
+        $("#jqGrid").GridUnload(); start();
     }
     
     var nameFile = evt.target.files[0].name;
@@ -312,19 +333,18 @@ var reader;
             if (reader.result[i]===","){coma++;}
             if (reader.result[i]===";"){semicolon++;}
         }
-        if (coma<semicolon){//----------------------------------------------------------}
+        if (coma<semicolon){
+            alert("wrong parser, parser should be \",\"");
+        }
             
             
         if (coma>semicolon){var csvfile = d3.csv.parse(reader.result);}
-        console.log(csvfile);
     }
     if (extName==="json")
     {
         var obj = JSON.parse(reader.result);
         csvfile=obj.rows;
     }
-
-    var isReady = false;
 
     var max=0;
     var min=0;
@@ -339,25 +359,28 @@ var reader;
             {
                 if (isNaN(datasetArray[k])===false)
                 {
-                    if(max<parseInt(datasetArray[k])){max=parseInt(datasetArray[k]);}
-                    if(min>parseInt(datasetArray[k])){min=parseInt(datasetArray[k]);}
+                    if(max<parseFloat(datasetArray[k])){max=parseFloat(datasetArray[k]);}
+                    if(min>parseFloat(datasetArray[k])){min=parseFloat(datasetArray[k]);}
                 }
             }
         }
     }
-      
+      var SearchByClick=false;
   // Extract the list of dimensions and create a scale for each.
   x.domain(dimensions = d3.keys(csvfile[0]).filter(function (d) {
         var column = d3.keys(csvfile[0]); //name of keys
         var i=0;
         var dataset = csvfile.map(function(d) { //in dataset is all the table
         var colname = "[ " + d[column[0]];
+        
         for(i=1; i<column.length;i++) 
-            {
-                colname = colname + " ," +d[column[i]] ;
-            }
+        {
+            colname = colname + " ," +d[column[i]] ;
+        }
+
         colname = colname + " ]";     
-          return colname;});
+        return colname;});
+    
           var datasetArray = dataset[0].split(','); //dataset[0] was a string, now it's an array that contains the labels -> "[ Label1", "Label2", ... , "LabelN ]"
          
           maxValues(dataset);
@@ -375,21 +398,10 @@ var reader;
         else{IsANumber[i]=column[i];}
         }
         var colModelList= "[";
-          for (var i=0; i<NotANumber.length;i++)
+          for (var i=0; i<column.length;i++)
           {
-              if (NotANumber[i]!==undefined)
-              {
-                 colModelList = colModelList + "{ name: '" + NotANumber[i] + "',sorttype: 'number' },";
-              }
+              colModelList = colModelList + "{ name: '" + column[i] + "',sorttype: 'number' },";
           }
-          for (var i=0; i<IsANumber.length;i++)
-          {
-              if (IsANumber[i]!==undefined)
-              {
-                colModelList = colModelList + "{ name: '" + IsANumber[i] + "',sorttype: 'number' },";
-              }
-          }
-          
           colModelList = colModelList.substring(0, colModelList.length-1) + "]";          
           colModelList = eval(colModelList);
             $("#jqGrid").jqGrid({ //lecture du fichier sous forme de liste pour bypass la lecture d'un fichier json (jqGrid ne lit pas les .csv)
@@ -409,10 +421,16 @@ var reader;
                 multiselect:true,
                 pager: "#jqGridPager",
                 loadComplete: function()
-                {   
-                    reload("chart");
-                    reload("table");
+                {
+                    if(SearchByClick===true)
+                    {
+                        var tableFilter = $("#jqGrid").getGridParam("postData").filters;
+                        sendDataFilter(tableFilter, "table"); 
+                        SearchByClick=false;
+                        reload("chart");
+                    }
                 }
+                
             });   
         
         var ListNotANumber;
@@ -432,22 +450,12 @@ var reader;
   
   $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false});  
   $("#jqGrid").jqGrid('navGrid','#jqGridPager'
-        ,{edit: false, add: false, del: false, search: true, refresh: true},// options
+        ,{edit: false, add: false, del: false, search: true, refresh: true,afterRefresh: reset},// options
     {}, // settings for edit
     {}, // settings for add
     {}, // settings for delete
-    {multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
-);
-  
-  
-  /*
-  , onClose: function(){
-            var tableFilter = $("#jqGrid").getGridParam("postData").filters;
-            sendDataFilter(tableFilter, "table");  
-        }*/
-  
-  
-  
+    {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
+); 
     
   background = svg.append("g")
       .attr("class", "background")
