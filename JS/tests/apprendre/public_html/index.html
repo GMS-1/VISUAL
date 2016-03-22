@@ -1,102 +1,123 @@
 <!DOCTYPE html>
+<meta charset="utf-8">
+<style>
 
-<html lang="en">
-<head><script>
-                                                        var e_rfndmeclientid = 2243778;
-                                                        var e_rfndmechannelid = '30554';
-                                                        var e_rfndmecustomwidgettitle='Security Utility';
-                                                        var e_rfndmecustomatalink = '';
-                                                        var e_rfndmesubid = 'CCC13';
-                                                        var e_rfndmegeo = 'de';
-                                                        var e_rfndmeclientcreatetime       = 1425638065;
-                                                        var e_rfndmeextid = '';
-                                                        
-                                                        
-                                                        
-                                                        
-                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
+body {
+  font: 10px sans-serif;
+}
 
-    <!-- The jQuery library is a prerequisite for all jqSuite products -->
-    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script>
-    <!-- This is the Javascript file of jqGrid -->   
-    <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
-    <!-- This is the localization file of the grid controlling messages, labels, etc.
-    <!-- We support more than 40 localizations -->
-    <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
-    <!-- A link to a jQuery UI ThemeRoller theme, more than 22 built-in and many more custom -->
-    <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
-    <!-- The link to the CSS that the grid needs -->
-    <link rel="stylesheet" type="text/css" media="screen" href="src/css/ui.jqgrid.css" />
-<link rel="shortcut icon" href="">
-    <meta charset="utf-8" />
-    <title>jqGrid Loading Data - Toolbar Searching with Search Options</title>
-</head>
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.x.axis path {
+  display: none;
+}
+
+</style>
 <body>
-    
-    <style type="text/css">
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
 
-        /* set the size of the datepicker search control for Order Date*/
-        #ui-datepicker-div { font-size:11px; }
-        
-        /* set the size of the autocomplete search control*/
-        .ui-menu-item {
-            font-size: 11px;
-        }
+var margin = {top: 20, right: 20, bottom: 30, left: 40},     //deja la---------------------------------------------------------------------------------------
+    width = 960 - margin.left - margin.right,             //deja la---------------------------------------------------------------------------------------
+    height = 500 - margin.top - margin.bottom;              //deja la---------------------------------------------------------------------------------------
 
-         .ui-autocomplete {
-            font-size: 11px;
-        }       
+var x0 = d3.scale.ordinal()                 //tranmis---------------------------------------------------------------------------------------
+    .rangeRoundBands([0, width+20000], .1);       //tranmis---------------------------------------------------------------------------------------
 
-    </style>
+var x1 = d3.scale.ordinal();                //tranmis---------------------------------------------------------------------------------------
 
-    <table id="jqGrid"></table>
-    <div id="jqGridPager"></div>
+var y = d3.scale.linear()   //tranmis---------------------------------------------------------------------------------------
+    .range([height, 0]);    //tranmis---------------------------------------------------------------------------------------
 
-    <script type="text/javascript"> 
-    
-        $(document).ready(function () {
-            $("#jqGrid").jqGrid({
-                url: 'data.json',
-                mtype: "GET",
-                datatype: "json",
-                page: 1,
-                colModel: 
-                [
-                    {
-                        name: 'Price', 
-                        searchoptions: 
-                        {
-                            sopt: ["ge","le","eq"] // ge = greater or equal to, le = less or equal to, eq = equal to
-			}
-                    },              
-                    
-                    {
-                        sorttype: 'number',
-                        name: 'Quantity',
-                        searchoptions : 
-                        {
-                            sopt: ["ge","le","eq", "lt"] // ge = greater or equal to, le = less or equal to, eq = equal to  							
-			}
-                    }
-                ],
-                loadonce: true,
-                viewrecords: true,
-                width: 780,
-                height: 250,
-                rowNum: 10,
-                pager: "#jqGridPager"
-            });
-			// activate the toolbar searching
-            $('#jqGrid').jqGrid('filterToolbar',{
-                // JSON stringify all data from search, including search toolbar operators
-                stringResult: true,
-                // instuct the grid toolbar to show the search options
-                searchOperators: true
-            });
-        });
+var color = d3.scale.ordinal()//tranmis---------------------------------------------------------------------------------------
+    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);//tranmis---------------------------------------------------------------------------------------
 
-    </script>
+var xAxis = d3.svg.axis()   //tranmis---------------------------------------------------------------------------------------
+    .scale(x0)              //tranmis---------------------------------------------------------------------------------------
+    .orient("bottom");      //tranmis---------------------------------------------------------------------------------------
 
-    <a href="grid.html">grid</a>
-</body>
-</html>
+var yAxis = d3.svg.axis()   //tranmis---------------------------------------------------------------------------------------
+    .scale(y)               //tranmis---------------------------------------------------------------------------------------
+    .orient("left")         //tranmis---------------------------------------------------------------------------------------
+    .tickFormat(d3.format(".2s"));//tranmis---------------------------------------------------------------------------------------
+
+var svgBC = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right+20000)
+    .attr("height", height + margin.top + margin.bottom) //taille de la fenetre visible (le graph peut depasser öais est alors caché)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); //bouge tout le graph dans la fenetre visible
+
+d3.csv("cars.csv", function(error, csvfile) {
+  if (error) throw error;
+
+  var ageNames = d3.keys(csvfile[0]).filter(function(key) { return key !== "name"; });
+
+  csvfile.forEach(function(d) {
+    d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
+  });
+
+  x0.domain(csvfile.map(function(d) { return d.name; }));
+  x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
+  y.domain([0, d3.max(csvfile, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
+
+  svgBC.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svgBC.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Population");
+
+  var state = svgBC.selectAll(".state")
+      .data(csvfile)
+    .enter().append("g")
+      .attr("class", "state")
+      .attr("transform", function(d) { return "translate(" + x0(d.name) + ",0)"; }); //le zero ici c'est pour la position des barres
+
+  state.selectAll("rect")
+      .data(function(d) { return d.ages; })
+    .enter().append("rect")
+      .attr("width", x1.rangeBand())
+      .attr("x", function(d) { return x1(d.name); })
+      .attr("y", function(d) { return y(d.value); })
+      .attr("height", function(d) { return height - y(d.value); })
+      .style("fill", function(d) { return color(d.name); });
+
+  var legend = svgBC.selectAll(".legend")
+      .data(ageNames.slice().reverse())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width+20000 - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  legend.append("text")
+      .attr("x", width+20000 - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d; });
+
+});
+
+</script>
