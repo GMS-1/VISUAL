@@ -82,9 +82,12 @@ var e_rfndmeextid = '';
     <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
     <script type="text/ecmascript" src="src/grid.custom.js"></script>
     <script type="text/ecmascript" src="jquery-ui-1.11.4/jquery-ui.min.js"></script>
-
+    <script type="text/ecmascript" src="plugins/grid.addons"></script>
+    <script type="text/ecmascript" src="plugins/ui.multiselect.js"></script>
+    
     <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="src/css/ui.jqgrid.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="plugins/ui.multiselect.css" />
 
 <script>
 //define the size between 2 axes
@@ -174,6 +177,7 @@ var reader;
       setTimeout("document.getElementById('progress_bar').className='';", 2000);
     };
     // Read in the file as a binary string.
+    var FilterAuto=[];
     var FilterTable=[];
     var FilterChart=[];
     var FilterGlob=[];
@@ -234,6 +238,22 @@ var reader;
     function sendDataFilter(dataFilter, source) //gathered filter from the different elements of the dashboard -> separately and then gathered in a global variable
     {
         lastSource=source;
+        if (source === "autoFilter")
+        {
+            FilterAuto=[];
+            if (dataFilter!==undefined)
+            {
+                dataFilter = JSON.parse(dataFilter);
+                for (i=0; i<dataFilter.rules.length; i++)
+                {
+                    var rule = new Object;
+                    rule.field=dataFilter.rules[i].field;
+                    rule.op="eq";
+                    rule.data=parseFloat(dataFilter.rules[i].data);
+                    FilterAuto.push(rule);
+                }
+            }
+        }
         if (source === "table")
         {
             FilterTable=[];
@@ -249,12 +269,22 @@ var reader;
                     FilterTable.push(rule);
                 }
             }
-            
             for(var i=0; i<FilterTable.length; i++)
             {
                 for (var j=0; j<FilterChart.length; j++)
                 {
                     if (FilterTable[i].field===FilterChart[j].field && FilterTable[i].op===FilterChart[j].op && FilterTable[i].data===FilterChart[j].data)
+                    {
+                        FilterTable.splice(i, 1);
+                        i=0;j=0;
+                    }
+                }
+            }
+            for(var i=0; i<FilterTable.length; i++)
+            {
+                for (var j=0; j<FilterAuto.length; j++)
+                {
+                    if (FilterTable[i].field===FilterAuto[j].field && FilterTable[i].op===FilterAuto[j].op && FilterTable[i].data===FilterAuto[j].data)
                     {
                         FilterTable.splice(i, 1);
                         i=0;j=0;
@@ -287,9 +317,7 @@ var reader;
         eval(FilterChart);
         for (i=0; i<FilterChart.length;i++){FilterGlob.push(FilterChart[i]);}
         for (i=0; i<FilterTable.length;i++){FilterGlob.push(FilterTable[i]);}
-        console.log(FilterTable);
-        console.log(FilterChart);
-        console.log(FilterGlob);
+        for (i=0; i<FilterAuto.length;i++){FilterGlob.push(FilterAuto[i]);}
     }
         
     function reload(source)
@@ -334,7 +362,8 @@ var reader;
             if (reader.result[i]===";"){semicolon++;}
         }
         if (coma<semicolon){
-            alert("wrong parser, parser should be \",\"");
+            var ssv = d3.dsv(";", "text/plain");
+            var csvfile = ssv.parse(reader.result);
         }
             
             
@@ -366,8 +395,9 @@ var reader;
         }
     }
       var SearchByClick=false;
+      var bannedColumn = [];
   // Extract the list of dimensions and create a scale for each.
-  x.domain(dimensions = d3.keys(csvfile[0]).filter(function (d) {
+  x.domain(dimensions = d3.keys(csvfile[0]).filter(function (d) {  //d is the name of the axis
         var column = d3.keys(csvfile[0]); //name of keys
         var i=0;
         var dataset = csvfile.map(function(d) { //in dataset is all the table
@@ -394,13 +424,16 @@ var reader;
         
         for (i=0; i<column.length; i++)
         {
+            console.log(datasetArray[i]);
+            console.log(isNaN(datasetArray[i]));
         if(isNaN(datasetArray[i])===true){NotANumber[i]=column[i];}//fill 2 array with label that corespond to numeric a not numeric values
         else{IsANumber[i]=column[i];}
         }
+        
         var colModelList= "[";
           for (var i=0; i<column.length;i++)
           {
-              colModelList = colModelList + "{ name: '" + column[i] + "',sorttype: 'number' },";
+              colModelList = colModelList + "{ name: '" + column[i] + "',sorttype: 'number'},";
           }
           colModelList = colModelList.substring(0, colModelList.length-1) + "]";          
           colModelList = eval(colModelList);
@@ -415,9 +448,10 @@ var reader;
                 multisearch: true,
                 deselectAfterSort: true,
                 multipleSearch:true,
-                width: width,
+                width: 940,
                 height: 200,
-                rowNum: 150,
+                rowNum: 100,
+                rowList: [100, 250, 500, 1000],
                 multiselect:true,
                 pager: "#jqGridPager",
                 loadComplete: function()
@@ -434,13 +468,18 @@ var reader;
             });   
         
         var ListNotANumber;
+        if (bannedColumn !== undefined)
+            {for(var i=0; i<bannedColumn.length; i++)
+            {console.log(bannedColumn);
+                NotANumber.push(bannedColumn(i));
+            } }
         ListNotANumber = d!==NotANumber[0];
         for(i=1;i<NotANumber.length;i++)
         {
             ListNotANumber = ListNotANumber && d!==NotANumber[i];
         }
         return ListNotANumber
-
+        
         && (y[d] = d3.scale.linear()
         .domain(d3.extent(csvfile, function(p) { return +p[d];}))
         .range([height, 0]));
@@ -448,7 +487,7 @@ var reader;
         
   }));
   
-  $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false});  
+  $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false, afterSearch: function(){sendDataFilter(($("#jqGrid").getGridParam("postData").filters), "autoFilter"); reload("table");reload("chart");}});
   $("#jqGrid").jqGrid('navGrid','#jqGridPager'
         ,{edit: false, add: false, del: false, search: true, refresh: true,afterRefresh: reset},// options
     {}, // settings for edit
@@ -456,6 +495,16 @@ var reader;
     {}, // settings for delete
     {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
 ); 
+  
+  $("#jqGrid").jqGrid('navButtonAdd', '#jqGridPager', {
+         caption: "",
+         buttonicon: "ui-icon-calculator",
+         width: 10,
+         title: "chose columns",
+         onClickButton: function () {
+             $(this).jqGrid('columnChooser', {});
+         }
+     });
     
   background = svg.append("g")
       .attr("class", "background")
@@ -463,7 +512,7 @@ var reader;
       .data(csvfile)
     .enter().append("path")
       .attr("d", path);
-      var color = d3.scale.category20b();
+      
   // Add blue foreground lines for focus. Over the grey one, disappear when selection.
   foreground = svg.append("g")
       .attr("class", "foreground")
@@ -471,7 +520,15 @@ var reader;
       .data(csvfile)
     .enter().append("path")
       .attr("d", path)
-      .attr("stroke",  "steelblue"); //,function(d){return d.color});
+      .attr("stroke", function() { return color();}); 
+   function color()
+   {
+       var a = Math.floor((Math.random() * 255) + 1);
+       var b = Math.floor((Math.random() * 255) + 1);
+       var c = Math.floor((Math.random() * 255) + 1);
+       return 'rgb(' + [a,b,c].join(',') + ')';
+   };
+   
   // Add a group element for each dimension. Change the column order
   var g = svg.selectAll(".dimension")
       .data(dimensions)
@@ -491,10 +548,12 @@ var reader;
           x.domain(dimensions);
           g.attr("transform", function(d) { return "translate(" + position(d) + ")"; });
         })
-        .on("dragend", function(d) {  //d= nom de l'axe 
-          if (dragging[d]===940)
+        .on("dragend", function(d) {  //d= nom de l'axe    ------------------------------------------------------------------------------------
+          if (dragging[d]===width)
           {
-             foreground.attr("class", "delete");
+            console.log("here");
+            dragging[d] = 940; //position of the dragged axis
+            parcoords.hideAxis(d).render().updateAxes();
           }
           else
           {
@@ -534,6 +593,7 @@ var reader;
   document.getElementById('files').addEventListener('change', handleFileSelect, false);
   
 </script>
+<button id=button type="button">Click Me!</button>
 <table id="jqGrid"></table>
 <div id="jqGridPager"></div>
 </body>
