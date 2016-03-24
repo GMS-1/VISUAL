@@ -151,6 +151,7 @@ function brushstart() {
 
 ////////////////////////////////////////////////////////////////
 var reader;
+var OpenAlert=0;
   var progress = document.querySelector('.percent');
   function abortRead() {
     reader.abort();
@@ -207,6 +208,7 @@ var reader;
     var FilterChart=[];
     var FilterGlob=[];
     var bannedColumn = [];
+    var colorLine = [];
     
     reader.onloadend = function start() 
     {
@@ -259,7 +261,6 @@ var reader;
         }) ? null : "none";
       });
     }
-    console.log(FilterGlob);
     var lastSource;
     
     function sendDataFilter(dataFilter, source) //gathered filter from the different elements of the dashboard -> separately and then gathered in a global variable
@@ -442,9 +443,13 @@ var reader;
       var NotANumber=[]; //contains name of Label for non numeric  column
       var IsANumber=[];  //contains name of Label for numeric  column
       var ListNotANumber;
+      var colModelList;
+      var column;
+      var list;
+      
   // Extract the list of dimensions and create a scale for each.
   x.domain(dimensions = d3.keys(csvfile[0]).filter(function (d) {  //d is the name of the axis
-        var column = d3.keys(csvfile[0]); //name of keys
+        column = d3.keys(csvfile[0]); //name of keys
         var i=0;
         var dataset = csvfile.map(function(d) { //in dataset is all the table
         var colname = "[ " + d[column[0]];
@@ -460,7 +465,7 @@ var reader;
          
           maxValues(dataset);
           
-        var list = JSON.stringify(csvfile);           
+        list = JSON.stringify(csvfile);           
             
         datasetArray[0]=datasetArray[0].substring(2); //remove the [] at the beginnig and the end of the String (now : first and last item of the array)
           datasetArray[column.length-1]=datasetArray[column.length-1].substring(0,datasetArray[column.length-1].length-2);
@@ -479,45 +484,14 @@ var reader;
             }
             return false;
         }
-        
-        
-        var colModelList= "[";
+        colModelList= "[";
           for (var i=0; i<column.length;i++)
           {
               colModelList = colModelList + "{ name: '" + column[i] + "',sorttype: 'number', hidden:" + banned(column[i]) + "},";
           }
           colModelList = colModelList.substring(0, colModelList.length-1) + "]";          
           colModelList = eval(colModelList);
-            $("#jqGrid").jqGrid({ //lecture du fichier sous forme de liste pour bypass la lecture d'un fichier json (jqGrid ne lit pas les .csv)
-                datastr: list,
-                datatype: "jsonstring",
-                colNames: column,
-                sortable:true,
-                colModel: colModelList,
-		loadonce: true,
-                multiSort: true,
-                multisearch: true,
-                deselectAfterSort: true,
-                multipleSearch:true,
-                viewrecords: true,
-                width: width,
-                height: 200,
-                rowNum: 100,
-                rowList: [100, 250, 500, 1000],
-                multiselect:true,
-                pager: "#jqGridPager",
-                loadComplete: function()
-                {
-                    if(SearchByClick===true)
-                    {
-                        var tableFilter = $("#jqGrid").getGridParam("postData").filters;
-                        sendDataFilter(tableFilter, "table"); 
-                        SearchByClick=false;
-                        reload("chart");
-                    }
-                }
-                
-            });   
+              
         
         if (bannedColumn !== undefined)
         {
@@ -539,38 +513,7 @@ var reader;
 
         
   }));
-  
-  $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false, afterSearch: function(){sendDataFilter(($("#jqGrid").getGridParam("postData").filters), "autoFilter"); reload("table");reload("chart");}});
-  $("#jqGrid").jqGrid('navGrid','#jqGridPager'
-        ,{edit: false, add: false, del: false, search: true, refresh: true,afterRefresh: reset},// options
-    {}, // settings for edit
-    {}, // settings for add
-    {}, // settings for delete
-    {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
-); 
-
-  $("#jqGrid").gridResize();
-  
-  $("#jqGrid").jqGrid('navButtonAdd', '#jqGridPager', {
-         caption: "",
-         buttonicon: "ui-icon-calculator",
-         width: 10,
-         title: "chose columns",
-         onClickButton: function () {
-             $(this).jqGrid('columnChooser', 
-             {
-                 "done": function ()
-                    {var param = $("#jqGrid").getGridParam('colModel');
-                       bannedColumn=[];
-                       for (i=1; i<param.length; i++)
-                       {
-                           if (param[i].hidden===true){bannedColumn.push(param[i].name);}
-                       }
-                       redraw();
-                   }
-             });
-         }
-     });
+     
   background = svg.append("g")
       .attr("class", "background")
     .selectAll("path")
@@ -585,8 +528,8 @@ var reader;
       .data(csvfile)
     .enter().append("path")
       .attr("d", path)
-      .attr("stroke", function() { return "hsl(" + Math.random() * 360 + ",100%,50%)";}); 
-   
+      .attr("stroke", function(d) {var memory=new Object ; var a = Math.random() * 360; memory.color=a;memory.data=JSON.stringify(d);colorLine.push(memory); return "hsl(" + a + ",100%,50%)";}); 
+      
   // Add a group element for each dimension. Change the column order
   var g = svg.selectAll(".dimension")
       .data(dimensions)
@@ -651,34 +594,135 @@ var reader;
       .attr("x", -8)
       .attr("width", 16);   
       
+      
+      
+      
+      
+  //-----------------------------------------------------------------------------------------
+  //
+  //                        grid
+  //
+  //-----------------------------------------------------------------------------------------
+  
+  $("#jqGrid").jqGrid({ //lecture du fichier sous forme de liste pour bypass la lecture d'un fichier json (jqGrid ne lit pas les .csv)
+                datastr: list,
+                datatype: "jsonstring",
+                colNames: column,
+                sortable:true,
+                colModel: colModelList,
+		loadonce: true,
+                multiSort: true,
+                multisearch: true,
+                deselectAfterSort: true,
+                multipleSearch:true,
+                viewrecords: true,
+                width: width,
+                height: 200,
+                rowNum: 100,
+                rowList: [100, 250, 500, 1000],
+                multiselect:true,
+                pager: "#jqGridPager",
+                loadComplete: function()
+                {
+                    if(SearchByClick===true)
+                    {
+                        var tableFilter = $("#jqGrid").getGridParam("postData").filters;
+                        sendDataFilter(tableFilter, "table"); 
+                        SearchByClick=false;
+                        reload("chart");
+                    }
+                    var rowData = $("#jqGrid").getDataIDs();
+                    for (var i = 0; i < rowData.length; i++) 
+                    {
+                        var tableData = $("#jqGrid").getRowData(rowData[i]);
+                        $("#jqGrid").jqGrid('setCell', rowData[i],0,  "", {'background':colorTable(tableData)});
+                    }
+                }
+                
+            }); 
+        
+    function colorTable(data)
+    {
+        var i=0;
+        
+        for (i=0; i<colorLine.length; i++)
+        {
+            if(colorLine[i].data === JSON.stringify(data))
+            {
+                return "hsl(" + colorLine[i].color + ",100%,50%)"; //la bonne couleur
+                i=colorLine.length+1;
+            }
+        }
+        return 'white';
+    }
+  
+  $("#jqGrid").jqGrid('filterToolbar', {searchOnEnter: false, afterSearch: function(){sendDataFilter(($("#jqGrid").getGridParam("postData").filters), "autoFilter"); reload("table");reload("chart");}});
+  $("#jqGrid").jqGrid('navGrid','#jqGridPager'
+        ,{edit: false, add: false, del: false, search: true, refresh: true,afterRefresh: reset},// options
+    {}, // settings for edit
+    {}, // settings for add
+    {}, // settings for delete
+    {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
+); 
+
+  $("#jqGrid").gridResize();
+  
+  $("#jqGrid").jqGrid('navButtonAdd', '#jqGridPager', {
+         caption: "",
+         buttonicon: "ui-icon-calculator",
+         width: 10,
+         title: "chose columns",
+         onClickButton: function () {
+             $(this).jqGrid('columnChooser', 
+             {
+                 "done": function ()
+                    {var param = $("#jqGrid").getGridParam('colModel');
+                       bannedColumn=[];
+                       for (i=1; i<param.length; i++)
+                       {
+                           if (param[i].hidden===true){bannedColumn.push(param[i].name);}
+                       }
+                       redraw();
+                   }
+             });
+         }
+     });
+     
+     
       //---------------------------------------------------------------------------------------------
       //
       //                                Bar Chart
       //
       //--------------------------------------------------------------------------------------------- 
-
-        console.log(FilterGlob);
-        while(NotANumber[0]===undefined) //   /!\ Si tout n'est que nombre...
+        if (NotANumber.length!== 0)
+        {
+            while(NotANumber[0]===undefined)
             {NotANumber.shift();}
-            
-        if (NotANumber !== [])
-          {
-              var unshown = "key !== \"" + NotANumber[0]+ "\"";
-              for(var i=1; i<NotANumber.length; i++)
-              {
-                  if (NotANumber[i]!==undefined)
-                  unshown=unshown + " && key !== \"" + NotANumber[i] +"\"";
-              }
-              if (bannedColumn!==[])
-              {
-                  for(var j=1; j<bannedColumn.length; j++)
-                  {
-                      if(bannedColumn[j]!==undefined)
-                      unshown=unshown + " && key !== \"" + bannedColumn[j] + "\"";
-                  }
-              }
-          }
-            //else if banned !== 0 (parce que sinon on peut hide que si NAN est non nul) 
+            var unshown = "key !== \"" + NotANumber[0]+ "\"";
+            for(var i=1; i<NotANumber.length; i++)
+            {
+                if (NotANumber[i]!==undefined)
+                unshown=unshown + " && key !== \"" + NotANumber[i] +"\"";
+            }
+            if (bannedColumn!==[])
+            {
+                for(var j=1; j<bannedColumn.length; j++)
+                {
+                    if(bannedColumn[j]!==undefined)
+                    unshown=unshown + " && key !== \"" + bannedColumn[j] + "\"";
+                }
+            }
+        }
+        else 
+        {
+            if (OpenAlert===0)
+            {
+                alert("Exclure une colone pour créer le Bar Chart\n\
+                Cette colonne sera votre axe horizontal"); 
+                OpenAlert=1;
+            }
+        }
+        //if banned !== 0 (parce que sinon on peut hide que si NAN est non nul) 
             
         var ageNames = d3.keys(csvfile[0]).filter(function(key) {return eval(unshown); }); //define if a column is shown or not
         csvfile.forEach(function(d) {
@@ -750,7 +794,7 @@ var reader;
             .attr("transform", function(d) { return "translate(" + x0(d[NotANumber[0]]) + ",0)"; }); //le zero ici c'est pour la position des barres 
     
         state.selectAll("rect")
-            .data(function(d) {if(IsFiltered(d)===false) {return d.ages;} else return 0;}) //////////////////////c'est ICI!!!!
+            .data(function(d) {if(IsFiltered(d)===false) {return d.ages;} else return 0;}) 
           .enter().append("rect")
             .attr("width", x1.rangeBand())
             .attr("x", function(d) { return x1(d.name); })
