@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--
+Generic treemap, based on http://bost.ocks.org/mike/treemap/
+
+-->
+<html>
+<head><script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
+
+<meta charset="utf-8">
+<title>Zoomable treemap template</title>
+<style>
+       .node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}
+
+.label,
+.node--root,
+.node--leaf {
+  pointer-events: none;
+} 
+</style>
+</head>
+
+<body>
+<div id="chart"></div>
+
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = 20,
+    diameter = 960;
+
+var color = d3.scale.linear()
+    .domain([-1, 5])
+    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+    .interpolate(d3.interpolateHcl);
+
+var pack = d3.layout.pack()
+    .padding(2)
+    .size([diameter - margin, diameter - margin])
+    .value(function(d) { return d.size; });
+
+var svgZC = d3.select("body").append("svg")
+    .attr("width", diameter)
+    .attr("height", diameter)
+  .append("g")
+    .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+var defaults = {
+    margin: {top: 24, right: 0, bottom: 0, left: 0},
+    rootname: "TOP",
+    format: ",d",
+    title: "",
+    width: 960,
+    height: 500
+};
+
+function main(o, data) {
+ var root,
+      opts = $.extend(true, {}, defaults, o),
+      formatNumber = d3.format(opts.format),
+      rname = opts.rootname,
+      margin = opts.margin,
+      theight = 36 + 16;
+
+   $('#chart').width(opts.width).height(opts.height);
+  var width = opts.width - margin.left - margin.right,
+      height = opts.height - margin.top - margin.bottom - theight,
+      transitioning;
+  
+  var treemap = d3.layout.treemap() 
+      .children(function(d, depth) {return depth ? null : d._children; })
+      .sort(function(a, b) { return a.value - b.value; })
+      .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
+      .round(false);
+  
+  var svg = d3.select("#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.bottom + margin.top)
+      .style("margin-left", -margin.left + "px")
+      .style("margin.right", -margin.right + "px")
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .style("shape-rendering", "crispEdges");
+
+
+  if (opts.title) {
+    $("#chart").prepend("<p class='title'>" + opts.title + "</p>");
+  }
+  if (data instanceof Array) {
+    root = { key: rname, values: data };
+  } else {
+    root = data;
+  } 
+  
+  initialize(root);
+  accumulate(root);
+  layout(root);
+
+  function initialize(root) {
+    root.x = root.y = 0;
+    root.dx = width;
+    root.dy = height;
+    root.depth = 0;
+  }
+
+  // Aggregate the values for internal nodes. This is normally done by the
+  // treemap layout, but not here because of our custom implementation.
+  // We also take a snapshot of the original children (_children) to avoid
+  // the children being overwritten when when layout is computed.
+  function accumulate(d) {
+    return (d._children = d.values)
+        ? d.value = d.values.reduce(function(p, v) { return p + accumulate(v); }, 0)
+        : d.value;
+  }
+
+  // Compute the treemap layout recursively such that each group of siblings
+  // uses the same size (1×1) rather than the dimensions of the parent cell.
+  // This optimizes the layout for the current zoom state. Note that a wrapper
+  // object is created for the parent node for each group of siblings so that
+  // the parent’s dimensions are not discarded as we recurse. Since each group
+  // of sibling was laid out in 1×1, we must rescale to fit using absolute
+  // coordinates. This lets us use a viewport to zoom.
+  function layout(d) {
+    if (d._children) {
+      treemap.nodes({_children: d._children});
+      d._children.forEach(function(c) {
+        c.x = d.x + c.x * d.dx;
+        c.y = d.y + c.y * d.dy;
+        c.dx *= d.dx;
+        c.dy *= d.dy;
+        c.parent = d;
+        layout(c);
+      });
+    }
+  }
+}
+
+if (window.location.hash === "") {
+    d3.csv("age.csv", function(err, res) {          
+        if (!err) {
+            var data = d3.nest().key(function(d) { return d.flare; }).key(function(d) { return d.age; }).key(function(d) { return d.year; }).entries(res);
+            main({title: "title"}, {key: "World", values: data});
+            console.log(data[0]);
+            ZC(err, data);
+        }
+    });
+}
+
+
+
+function ZC(error, root)
+{
+    console.log(root);
+    
+    if (error) throw error;
+
+  var focus = root,
+      nodes = pack.nodes(root),
+      view;
+
+  var circle = svgZC.selectAll("circle")
+      .data(nodes)
+    .enter().append("circle")
+      .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; }) //d contient le nom, la taille, la position, la profondeur, les fils et le parent
+      .style("fill", function(d) { return d.children ? color(d.depth) : null; })
+      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+
+  var text = svgZC.selectAll("text")
+      .data(nodes)
+    .enter().append("text")
+      .attr("class", "label")
+      .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
+      .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
+      .text(function(d) { return d.name; });
+
+  var node = svgZC.selectAll("circle,text");
+
+  d3.select("body")
+      .style("background", color(-1))
+      .on("click", function() { zoom(root); });
+
+  zoomTo([470, 470, 470 * 2 + 40]);  //------------------------------------------valeur hard codée....------------------------------------------
+
+  function zoom(d) {
+    var focus0 = focus; focus = d;
+
+    var transition = d3.transition()
+        .duration(d3.event.altKey ? 7500 : 750)
+        .tween("zoom", function(d) {
+          var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+          return function(t) { zoomTo(i(t)); };
+        });
+
+    transition.selectAll("text")
+      .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+        .each("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+        .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  }
+
+  function zoomTo(v) {
+    var k = diameter / v[2]; view = v;
+    node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+    circle.attr("r", function(d) { return d.r * k; });
+  }
+};
+
+</script>
+</body>
+</html>

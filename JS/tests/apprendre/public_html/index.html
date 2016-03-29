@@ -1,123 +1,81 @@
 <!DOCTYPE html>
+<!--
+Generic treemap, based on http://bost.ocks.org/mike/treemap/
+
+-->
+<html>
+<head><script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
+
 <meta charset="utf-8">
+<title>Zoomable treemap template</title>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <style>
-
-body {
-  font: 10px sans-serif;
+       .node {
+  cursor: pointer;
 }
 
-.axis path,
-.axis line {
-  fill: none;
+.node:hover {
   stroke: #000;
-  shape-rendering: crispEdges;
+  stroke-width: 1.5px;
 }
 
-.bar {
-  fill: steelblue;
+.node--leaf {
+  fill: white;
 }
 
-.x.axis path {
-  display: none;
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
 
+.label,
+.node--root,
+.node--leaf {
+  pointer-events: none;
+} 
 </style>
+</head>
+
 <body>
-<script src="//d3js.org/d3.v3.min.js"></script>
+    <div>
+            <a href="dragdrop.html">Drag n Drop</a> <br>
+            <a href="grid.html">Grid</a><br>
+            <a href="test.html">Test</a><br>
+            <a href="BC.html">Bar Chart</a><br>
+            <a href="ZoomableC.html">Zoomable Circle</a><br>
+            <a href="TreeMap.html">Tree Map</a><br>
+        </div>
+    
+<div id="chart"></div>
+
 <script>
+    
+    d3.csv("age.csv", function(err, res) {   
+        for(i=0; i<res.length; i++)
+        {
+            res[i].flare=5;
+        }
+        console.log(res);
+        var data = d3.nest().key(function(d) { return d.flare; }).key(function(d) { return d.age; }).key(function(d) { return d.year; }).entries(res);
+console.log(data);
 
-var margin = {top: 20, right: 20, bottom: 30, left: 40},     //deja la---------------------------------------------------------------------------------------
-    width = 960 - margin.left - margin.right,             //deja la---------------------------------------------------------------------------------------
-    height = 500 - margin.top - margin.bottom;              //deja la---------------------------------------------------------------------------------------
-
-var x0 = d3.scale.ordinal()                 //tranmis---------------------------------------------------------------------------------------
-    .rangeRoundBands([0, width+20000], .1);       //tranmis---------------------------------------------------------------------------------------
-
-var x1 = d3.scale.ordinal();                //tranmis---------------------------------------------------------------------------------------
-
-var y = d3.scale.linear()   //tranmis---------------------------------------------------------------------------------------
-    .range([height, 0]);    //tranmis---------------------------------------------------------------------------------------
-
-var color = d3.scale.ordinal()//tranmis---------------------------------------------------------------------------------------
-    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);//tranmis---------------------------------------------------------------------------------------
-
-var xAxis = d3.svg.axis()   //tranmis---------------------------------------------------------------------------------------
-    .scale(x0)              //tranmis---------------------------------------------------------------------------------------
-    .orient("bottom");      //tranmis---------------------------------------------------------------------------------------
-
-var yAxis = d3.svg.axis()   //tranmis---------------------------------------------------------------------------------------
-    .scale(y)               //tranmis---------------------------------------------------------------------------------------
-    .orient("left")         //tranmis---------------------------------------------------------------------------------------
-    .tickFormat(d3.format(".2s"));//tranmis---------------------------------------------------------------------------------------
-
-var svgBC = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right+20000)
-    .attr("height", height + margin.top + margin.bottom) //taille de la fenetre visible (le graph peut depasser öais est alors caché)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); //bouge tout le graph dans la fenetre visible
-
-d3.csv("cars.csv", function(error, csvfile) {
-  if (error) throw error;
-
-  var ageNames = d3.keys(csvfile[0]).filter(function(key) { return key !== "name"; });
-
-  csvfile.forEach(function(d) {
-    d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
-  });
-
-  x0.domain(csvfile.map(function(d) { return d.name; }));
-  x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
-  y.domain([0, d3.max(csvfile, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
-
-  svgBC.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
-
-  svgBC.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-    .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .text("Population");
-
-  var state = svgBC.selectAll(".state")
-      .data(csvfile)
-    .enter().append("g")
-      .attr("class", "state")
-      .attr("transform", function(d) { return "translate(" + x0(d.name) + ",0)"; }); //le zero ici c'est pour la position des barres
-
-  state.selectAll("rect")
-      .data(function(d) { return d.ages; })
-    .enter().append("rect")
-      .attr("width", x1.rangeBand())
-      .attr("x", function(d) { return x1(d.name); })
-      .attr("y", function(d) { return y(d.value); })
-      .attr("height", function(d) { return height - y(d.value); })
-      .style("fill", function(d) { return color(d.name); });
-
-  var legend = svgBC.selectAll(".legend")
-      .data(ageNames.slice().reverse())
-    .enter().append("g")
-      .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-  legend.append("rect")
-      .attr("x", width+20000 - 18)
-      .attr("width", 18)
-      .attr("height", 18)
-      .style("fill", color);
-
-  legend.append("text")
-      .attr("x", width+20000 - 24)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .style("text-anchor", "end")
-      .text(function(d) { return d; });
-
-});
+    });
 
 </script>
+
+</body>
+</html>
