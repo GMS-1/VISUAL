@@ -6,7 +6,7 @@
     "value": 25500100
   },
   {
-    "key": "Åland Islands",
+    "key": "ï¿½land Islands",
     "region": "Europe",
     "subregion": "Northern Europe",
     "value": 28502
@@ -51,7 +51,7 @@
     "key": "Antarctica",
     "region": "",
     "subregion": "",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Antigua and Barbuda",
@@ -99,7 +99,7 @@
     "key": "Bahamas",
     "region": "Americas",
     "subregion": "Caribbean",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Bahrain",
@@ -165,7 +165,7 @@
     "key": "Bonaire",
     "region": "Americas",
     "subregion": "Caribbean",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Bosnia and Herzegovina",
@@ -183,7 +183,7 @@
     "key": "Bouvet Island",
     "region": "",
     "subregion": "",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Brazil",
@@ -195,7 +195,7 @@
     "key": "British Indian Ocean Territory",
     "region": "Africa",
     "subregion": "Eastern Africa",
-    "value": -1
+    "value": 2
   },
   {
     "key": "British Virgin Islands",
@@ -330,10 +330,10 @@
     "value": 4667096
   },
   {
-    "key": "Côte d'Ivoire",
+    "key": "Cï¿½te d'Ivoire",
     "region": "Africa",
     "subregion": "Western Africa",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Croatia",
@@ -348,7 +348,7 @@
     "value": 11167325
   },
   {
-    "key": "Curaçao",
+    "key": "Curaï¿½ao",
     "region": "Americas",
     "subregion": "Caribbean",
     "value": 150563
@@ -477,7 +477,7 @@
     "key": "French Southern and Antarctic Lands",
     "region": "",
     "subregion": "",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Gabon",
@@ -489,13 +489,13 @@
     "key": "Gambia",
     "region": "Africa",
     "subregion": "Western Africa",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Georgia",
     "region": "Asia",
     "subregion": "Western Asia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Germany",
@@ -585,7 +585,7 @@
     "key": "Heard Island and McDonald Islands",
     "region": "",
     "subregion": "",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Vatican City",
@@ -645,7 +645,7 @@
     "key": "Ireland",
     "region": "Europe",
     "subregion": "Northern Europe",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Isle of Man",
@@ -777,13 +777,13 @@
     "key": "Macau",
     "region": "Asia",
     "subregion": "Eastern Asia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Macedonia",
     "region": "Europe",
     "subregion": "Southern Europe",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Madagascar",
@@ -861,7 +861,7 @@
     "key": "Micronesia",
     "region": "Oceania",
     "subregion": "Micronesia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Moldova",
@@ -909,7 +909,7 @@
     "key": "Myanmar",
     "region": "Asia",
     "subregion": "South-Eastern Asia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Namibia",
@@ -1017,7 +1017,7 @@
     "key": "Palestine",
     "region": "Asia",
     "subregion": "Western Asia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Panama",
@@ -1086,7 +1086,7 @@
     "value": 1733842
   },
   {
-    "key": "Réunion",
+    "key": "Rï¿½union",
     "region": "Africa",
     "subregion": "Eastern Africa",
     "value": 821136
@@ -1110,7 +1110,7 @@
     "value": 10537222
   },
   {
-    "key": "Saint Barthélemy",
+    "key": "Saint Barthï¿½lemy",
     "region": "Americas",
     "subregion": "Caribbean",
     "value": 8938
@@ -1119,7 +1119,7 @@
     "key": "Saint Helena",
     "region": "Africa",
     "subregion": "Western Africa",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Saint Kitts and Nevis",
@@ -1137,7 +1137,7 @@
     "key": "Saint Martin",
     "region": "Americas",
     "subregion": "Caribbean",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Saint Pierre and Miquelon",
@@ -1164,7 +1164,7 @@
     "value": 32509
   },
   {
-    "key": "São Tomé and Príncipe",
+    "key": "Sï¿½o Tomï¿½ and Prï¿½ncipe",
     "region": "Africa",
     "subregion": "Middle Africa",
     "value": 187356
@@ -1245,7 +1245,7 @@
     "key": "South Georgia",
     "region": "Americas",
     "subregion": "South America",
-    "value": -1
+    "value": 2
   },
   {
     "key": "South Korea",
@@ -1341,7 +1341,7 @@
     "key": "Timor-Leste",
     "region": "Asia",
     "subregion": "South-Eastern Asia",
-    "value": -1
+    "value": 2
   },
   {
     "key": "Togo",
@@ -1431,7 +1431,7 @@
     "key": "United States Minor Outlying Islands",
     "region": "Americas",
     "subregion": "Northern America",
-    "value": -1
+    "value": 2
   },
   {
     "key": "United States Virgin Islands",

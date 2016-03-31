@@ -30,6 +30,7 @@
 </style>
 <body>
 <script src="//d3js.org/d3.v3.min.js"></script>
+<script src="http://underscorejs.org/underscore.js"></script>
 <script>
 
 var margin = 20,
@@ -43,7 +44,7 @@ var color = d3.scale.linear()
 var pack = d3.layout.pack()
     .padding(2)
     .size([diameter - margin, diameter - margin])
-    .value(function(d) { return d.size; })
+    .value(function(d) {return d.size; });
 
 var svg = d3.select("body").append("svg")
     .attr("width", diameter)
@@ -51,9 +52,43 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
 
-d3.json("dataZC.json", function(error, root) {
+d3.json("dataTM.json", function(error, res) {
+
+        res.forEach(function(row) {
+            rowName=Object.keys(row);
+        });
+
+    var dataArray = d3.nest().key(function(d) { return d.region; }).key(function(d) { return d.subregion; }).entries(res);
+    var file= "{\"name\": \"flare\",\"children\": [";
+
+
+function wr(data) //write a flat file like a file with parent // children
+{
+    var i;
+    for(i=0; i<data.length; i++)
+        {
+            file=file+"{\"name\": \"" + data[i].key + "\",";
+             if (data[i].values!==undefined)
+             {
+                 file=file+"\"children\": [";
+                 wr(data[i].values);
+             }
+             else
+             {
+                 file=file + "\"size\": "+ data[i].value + "}";
+             }
+             if (i===data.length-1)
+             {
+                 file=file+"]}";
+             }
+             else{file=file+",";}
+        }
+}
+wr(dataArray);
+
+   
+    var root = JSON.parse(file);
   if (error) throw error;
-console.log(root);
   var focus = root,
       nodes = pack.nodes(root),
       view;
