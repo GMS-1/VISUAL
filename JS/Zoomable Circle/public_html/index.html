@@ -26,7 +26,18 @@
     <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
 <meta charset="utf-8">
 <style>
-    
+
+div {
+ width: 100px;
+ float: left;
+ margin-right: 20px;
+}
+
+#table
+{
+    padding:50px;
+}
+
 .node {
   cursor: pointer;
 }
@@ -58,15 +69,15 @@
     
     Cochez pour inclure a la hierarchie.
     <br>Un element a pour parent l'element coché au dessus de lui et pour enfant celui d'en dessous.
-    
-    <br><br>
-     <table id="Selector"></table>
-    <div id="jqPager"></div>
-    
+    <br>Le dernier element non coché correspond a la taille de la bulle, l'avant dernier a son nom.
     <br>
     
+    <table id="Selector"></table>
+    <div id="jqPager"></div>
+    
     <table id="jqGrid"></table>
-    <div id="jqGridPager"></div>
+    <div id="jqGridPager"></div>    
+    
 <br><br>
 
 <script>
@@ -83,42 +94,17 @@ var pack = d3.layout.pack()
     .padding(2)
     .size([diameter - margin, diameter - margin])
     .value(function(d) {return d.size; });
+    
+var coucou=100;
 
 var svg = d3.select("body").append("svg")
-    .attr("width", diameter)
-    .attr("height", diameter)
+    .attr("margin",20)
+    .attr("width", diameter+coucou)
+    .attr("height", diameter+coucou)
   .append("g")
-    .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+    .attr("transform", "translate(" + (diameter+coucou) / 2 + "," + (diameter+coucou) / 2 + ")");
 
-d3.json("dataTM.json", function(error, res) {
-
-    var dataArray = d3.nest().key(function(d) { return d.region; }).key(function(d) { return d.subregion; }).entries(res);
-    var file= "{\"name\": \"flare\",\"children\": [";
-
-
-function wr(data) //rewrite a flat file as a file with parent // children
-{
-    var i;
-    for(i=0; i<data.length; i++)
-        {
-            file=file+"{\"name\": \"" + data[i].key + "\",";
-             if (data[i].values!==undefined)
-             {
-                 file=file+"\"children\": [";
-                 wr(data[i].values);
-             }
-             else
-             {
-                 file=file + "\"size\": "+ data[i].value + "}";
-             }
-             if (i===data.length-1)
-             {
-                 file=file+"]}";
-             }
-             else{file=file+",";}
-        }
-}
-wr(dataArray);
+d3.json("data2.json", function(error, res) {
 
    //----------------------------GRID ------------------------------------------
     
@@ -147,7 +133,7 @@ wr(dataArray);
             loadonce:true,
             viewrecords: true,
             rowList: [20,30,50],
-            width: "auto",
+            width: 300,
             height: "auto",
             rowNum: 20,
             pager: "#jqPager",
@@ -164,29 +150,40 @@ wr(dataArray);
         
         $("#Selector").gridResize();
         $("#Selector").sortableRows(
-                {update: function(){var rowData = $("#Selector").jqGrid("getRowData");orderHierarchy(rowData);}
+                {update: function(){var rowData = $("#Selector").jqGrid("getRowData");addToHierarchy(rowData);orderHierarchy(rowData);}
         }); 
         var inHierarchy=[];
+        var notInHierarchy=[];
+        
         function addToHierarchy()
         {
             inHierarchy=[];
+            notInHierarchy=[];
             for(i=0;i<column.length; i++)
             {
                 if(isSelected[i]===1)
                 {
                     inHierarchy.push(column[i]);
                 }
+                else{notInHierarchy.push(column[i]);}
             }
         }
         var Hierarchy=[];
+        var NonHierarchy=column;
         function orderHierarchy(data)
         {
             Hierarchy=[];
+            NonHierarchy=[];
+            console.log(data);
             for(var i=0; i<data.length; i++)
             {
                 for(var j=0; j<inHierarchy.length; j++)
                 {
                     if(data[i].nom===inHierarchy[j]){Hierarchy.push(inHierarchy[j]);}
+                }
+                for(var j=0; j<notInHierarchy.length; j++)
+                {
+                    if(data[i].nom===notInHierarchy[j]){NonHierarchy.push(notInHierarchy[j]);}
                 }
             }
             grid();
@@ -198,7 +195,14 @@ wr(dataArray);
         var colModelList= "[";
         for (var i=0; i<column.length;i++)
         {
-            colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false},";
+            if(isNaN(res[0][column[i]]))
+            {
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\"},";
+            }
+            else
+            {
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\", summaryType: \"sum\"},";
+            }
         }
         colModelList = colModelList.substring(0, colModelList.length-1) + "]";
         colModelList = eval(colModelList);
@@ -226,9 +230,16 @@ wr(dataArray);
             viewrecords: true,
             rowNum: 30,
             width: 780,
-            height: 780,
+            height: "auto",
             pager: "#jqGridPager",
-            grouping: true
+            grouping: true,
+            groupingView:
+            {
+                groupField: GroupField,
+                groupSummary: [true, true],
+                groupSummaryPos: ['header', 'header'],
+                groupCollapse: false
+            }
         });  
         
         $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
@@ -242,10 +253,52 @@ wr(dataArray);
             {}, // settings for delete
             {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
         ); 
+        d3.selectAll("g > *").remove(); 
+        ZC();
         }
                 
    //-------------------------------Zoomable Circle-------------------------------------------
-   
+   function ZC()
+   {
+    var data = d3.nest();
+    if(Hierarchy.length!==0)//
+    {    
+        Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
+    }
+    else{d3.nest().key(function(d){return d;});}
+    dataArray =data.entries(res);
+    
+    var file= "{\"name\": \"flare\",\"children\": [";
+
+
+    function wr(data) //rewrite a flat file as a file with parent // children
+    {
+        var i;
+        for(i=0; i<data.length; i++)
+            {
+                 if (data[i].values!==undefined)
+                 {
+                    file=file+"{\"name\": \"" + data[i].key + "\",";
+                    file=file+"\"children\": [";
+                    wr(data[i].values);
+                 }
+                 else
+                 {
+                    if(NonHierarchy.length<=2)
+                    {
+                         file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
+                    }
+                    else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
+                     file=file + "\"size\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                 }
+                 if (i===data.length-1)
+                 {
+                     file=file+"]}";
+                 }
+                 else{file=file+",";}
+            }
+    }
+    wr(dataArray);   
     var root = JSON.parse(file);
   if (error) throw error;
   var focus = root,
@@ -296,7 +349,7 @@ wr(dataArray);
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
     circle.attr("r", function(d) { return d.r * k; });
   }
-  
+   }  
   
        d3.select(self.frameElement).style("height", diameter + "px");
         });
