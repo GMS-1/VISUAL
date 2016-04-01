@@ -27,11 +27,9 @@
     <script type="text/ecmascript" src="plugins/grid.addons"></script>
     <script type="text/ecmascript" src="jquery-ui-1.11.4/jquery-ui.min.js"></script>
     <script type="text/ecmascript" src="src/grid.custom.js"></script>
-    <script type="text/ecmascript" src="plugins/ui.multiselect.js"></script>
     
     <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />   
-    <link rel="stylesheet" type="text/css" media="screen" href="plugins/ui.multiselect.css" />
     
 
     <title>Grid</title>
@@ -135,7 +133,7 @@
         grid();
         
         function grid()
-        {
+        {            
         var GroupField= "[";
         for (var i=0; i<Hierarchy.length;i++)
         {
@@ -155,17 +153,15 @@
             colModel: colModelList,
             loadonce:true,
             viewrecords: true,
-            rowList: [20,30,50],
+            rowNum: 30,
             width: 780,
-            height: "auto",
-            rowNum: 20,
+            height: 780,
             pager: "#jqGridPager",
-            grouping: true,
-            groupingView: {
-                groupField: GroupField ////////////////------------c'est la que ca bloque......  :S
-
-            }
+            grouping: true
         });  
+        
+        $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
+        
         $("#jqGrid").gridResize();
         
         $("#jqGrid").jqGrid('navGrid','#jqGridPager'
