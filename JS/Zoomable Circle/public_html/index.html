@@ -54,7 +54,7 @@
 </style>
 <body>
 <script src="//d3js.org/d3.v3.min.js"></script>
-<script src="http://underscorejs.org/underscore.js"></script>
+
 <script>
 
 var margin = 20,
@@ -78,15 +78,11 @@ var svg = d3.select("body").append("svg")
 
 d3.json("dataTM.json", function(error, res) {
 
-        res.forEach(function(row) {
-            rowName=Object.keys(row);
-        });
-
     var dataArray = d3.nest().key(function(d) { return d.region; }).key(function(d) { return d.subregion; }).entries(res);
     var file= "{\"name\": \"flare\",\"children\": [";
 
 
-function wr(data) //write a flat file like a file with parent // children
+function wr(data) //rewrite a flat file as a file with parent // children
 {
     var i;
     for(i=0; i<data.length; i++)
@@ -171,77 +167,53 @@ d3.select(self.frameElement).style("height", diameter + "px");
 
 <!----------------------------GRID ------------------------------------------>
 
-<table id="tree"></table>
-<div id="pager"></div>
+<br><br><br><br>
+     <table id="jqGrid"></table>
+    <div id="jqGridPager"></div>
 
 <script type="text/javascript"> 
-
-    jQuery(document).ready(function($) {
-                    jQuery('#tree').jqGrid({
-                            "url":"data.json",
-                            "colModel":[
-                                    {
-                                            "name":"name",
-                                            "index":"name",
-                                            "sorttype":"string",
-                                            "label":"Name",
-                                            "width":170
-                                    },
-                                    {
-                                            "name":"price",
-                                            "index":"price",
-                                            "sorttype":"numeric",
-                                            "label":"Price",
-                                            "width":90,
-                                            "align":"right"
-                                    },
-                                    {
-                                            "name":"qty_onhand",
-                                            "index":"qty_onhand",
-                                            "sorttype":"int",
-                                            "label":"Qty",
-                                            "width":90,
-                                            "align":"right"
-                                    },
-                                    {
-                                            "name":"color",
-                                            "index":"color",
-                                            "sorttype":"string",
-                                            "label":"Color",
-                                            "width":100
-                                    }
-                            ],
-                            "width":"780",
-                            "height": "auto",
-                            "hoverrows":false,
-                            "viewrecords":false,
-                            "gridview":true,
-                            "sortname":"lft",
-                            "loadonce":true,
-                            "rowNum":100,
-                            "scrollrows":true,
-                            // enable tree grid
-                            "treeGrid":true,
-                            // which column is expandable
-                            "ExpandColumn":"name",
-                            // datatype
-                            "treedatatype":"json",
-                            // the model used
-                            "treeGridModel":"nested",
-                            // configuration of the data comming from server
-                            "treeReader":{
-                                    "left_field":"lft",
-                                    "right_field":"rgt",
-                                    "level_field":"level",
-                                    "leaf_field":"isLeaf",
-                                    "expanded_field":"expanded",
-                                    "loaded":"loaded",
-                                    "icon_field":"icon"
-                            },
-                            "sortorder":"asc",
-                            "datatype":"json",
-                            "pager":"#pager"
-                    }); 
+    
+        $(document).ready(function () {
+            $("#jqGrid").jqGrid({
+                url: 'data2.json',
+                mtype: "GET",
+                datatype: "json",
+                colModel: [
+                    { label: 'OrderID', name: 'OrderID', key: true, width: 155 },
+                    { label: 'Customer ID', name: 'CustomerID', width: 70 },
+                    { label: 'Order Date', name: 'OrderDate', width: 150 },
+                    { 
+						label: 'Freight', 
+						name: 'Freight', 
+						width: 150,
+						formatter: 'number',
+						summaryTpl : "<b>{0}</b>",
+						summaryType: "sum"
+					},
+                    { label: 'Employee ID', name: 'EmployeeID', width: 150 }
+                ],
+				loadonce:true,
+				viewrecords: true,
+				rowList: [20,30,50],
+                width: 780,
+                height: "auto",
+                rowNum: 20,
+				sortname: 'OrderDate',
+                pager: "#jqGridPager",
+                grouping: true,
+                groupingView: {
+                    groupField: ["CustomerID", "EmployeeID"],
+                    groupColumnShow: [true, true],
+                    groupText: [
+						"CustomerID: <b>{0}</b>",
+						"EmployeeID: <b>{0}</b>"
+					],
+                    groupOrder: ["asc", "asc"],
+                    groupSummary: [true, false],
+					groupSummaryPos: ['header', 'header'],
+                    groupCollapse: false
+                }
             });
+        });
 
-</script>
+    </script>

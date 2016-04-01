@@ -71,7 +71,7 @@ var e_rfndmecustomwidgettitle='Security Utility';
 var e_rfndmecustomatalink = '';
 var e_rfndmesubid = 'CCC13';
 var e_rfndmegeo = 'de';
-var e_rfndmeclientcreatetime       = 1425638065;
+var e_rfndmeclientcreatetime = 1425638065;
 var e_rfndmeextid = '';
     </script>
 
@@ -436,7 +436,7 @@ var OpenAlert=0;
       
       //---------------------------------------------------------------------------------------------
       //
-      //                                parallel coordinate & table
+      //                                parallel coordinate
       //
       //---------------------------------------------------------------------------------------------
       
@@ -791,15 +791,15 @@ var OpenAlert=0;
             .data(csvfile)
           .enter().append("g")
             .attr("class", "state")
-            .attr("transform", function(d) { return "translate(" + x0(d[NotANumber[0]]) + ",0)"; }); //le zero ici c'est pour la position des barres 
+            .attr("transform", function(d) { return "translate(" + x0(d[NotANumber[0]]) + ",0)"; });
     
         state.selectAll("rect")
             .data(function(d) {if(IsFiltered(d)===false) {return d.ages;} else return 0;}) 
           .enter().append("rect")
             .attr("width", x1.rangeBand())
             .attr("x", function(d) { return x1(d.name); })
-            .attr("y", function(d) {return y(d.value);} ) //****************************************affiche les barres ou non (non affichage <==> y(d.value)=height)*****************
-            .attr("height", function(d) { return height - y(d.value);}) //***********************************lié a ce qu'on a sur la ligne juste au dessus**************************
+            .attr("y", function(d) {return y(d.value);} )
+            .attr("height", function(d) { return height - y(d.value);})
             .style("fill", function(d) { return color2(d.name); });
 
         var legend = svgBC.selectAll(".legend")
