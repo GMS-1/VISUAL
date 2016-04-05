@@ -89,13 +89,6 @@ rect.parent {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-
-window.addEventListener('message', function(e) {
-    var opts = e.data.opts,
-        data = e.data.data; 
-    return main(opts, data);
-}); 
-
 var defaults = {
     margin: {top: 24, right: 0, bottom: 0, left: 0},
     rootname: "TOP",
@@ -105,15 +98,16 @@ var defaults = {
     height: 500
 };
 
-function main(o, data) {
- var root,
-      opts = $.extend(true, {}, defaults, o),
+    d3.json("data2.json", function(err, result) {
+
+  var root,
+      opts = $.extend(true, {}, defaults, result),
       formatNumber = d3.format(opts.format),
       rname = opts.rootname,
       margin = opts.margin,
       theight = 36 + 16;
 
-   $('#chart').width(opts.width).height(opts.height);
+  $('#chart').width(opts.width).height(opts.height);
   var width = opts.width - margin.left - margin.right,
       height = opts.height - margin.top - margin.bottom - theight,
       transitioning;
@@ -128,13 +122,15 @@ function main(o, data) {
       .domain([0, height])
       .range([0, height]);
   
-  var treemap = d3.layout.treemap() 
-      .children(function(d, depth) {return depth ? null : d._children; })
-      .sort(function(a, b) { return a.value - b.value; })
+  var treemap = d3.layout.treemap()
+      .value(function(d) {return d.size;})
+      .children(function(d, depth) { return depth ? null : d._children; })
+      .sort(function(a, b) {    return a.value - b.value; })
       .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
-      .round(false);
-  
-  var svg = d3.select("#chart").append("svg")
+      .round(false)
+      .nodes(result);
+        
+  var svgTM = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.bottom + margin.top)
       .style("margin-left", -margin.left + "px")
@@ -143,7 +139,7 @@ function main(o, data) {
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
       .style("shape-rendering", "crispEdges");
   
-  var grandparent = svg.append("g")
+  var grandparent = svgTM.append("g")
       .attr("class", "grandparent");
   
   grandparent.append("rect")
@@ -154,22 +150,21 @@ function main(o, data) {
   grandparent.append("text")
       .attr("x", 6)
       .attr("y", 6 - margin.top)
-      .attr("dy", ".75em"); 
+      .attr("dy", ".75em");
 
   if (opts.title) {
     $("#chart").prepend("<p class='title'>" + opts.title + "</p>");
   }
-  if (data instanceof Array) {
-    root = { key: rname, values: data };
-  } else {
-    root = data;
-  } 
-  
-  
-  initialize(root);
-  accumulate(root);
-  layout(root);
+  if (treemap instanceof Array) {
+    root = { key: rname, values: treemap };
+  } else {    
+    root = treemap;
 
+  }
+    
+ // initialize(root);
+ // accumulate(root);
+ // layout(root);
   display(root);
 
   if (window.parent !== window) {
@@ -216,13 +211,14 @@ function main(o, data) {
   }
 
   function display(d) {
-    grandparent
+      
+    grandparent //header
         .datum(d.parent)
         .on("click", transition)
       .select("text")
         .text(name(d));
 
-    var g1 = svg.insert("g", ".grandparent")
+    var g1 = svgTM.insert("g", ".grandparent")
         .datum(d)
         .attr("class", "depth");
 
@@ -245,7 +241,7 @@ function main(o, data) {
         .text(function(d) { return d.key + " (" + formatNumber(d.value) + ")"; });
     children.append("text")
         .attr("class", "ctext")
-        .text(function(d) { return d.key; })
+        .text(function(d) { return d.name; })//Nom d'apres en transparence //**************
         .call(text2);
 
     g.append("rect")
@@ -254,17 +250,17 @@ function main(o, data) {
 
     var t = g.append("text")
         .attr("class", "ptext")
-        .attr("dy", ".75em");
+        .attr("dy", ".75em")
 
     t.append("tspan")
-        .text(function(d) { return d.key; });
+        .text(function(d) { return d.key || d.name; }); //*******************
     t.append("tspan")
         .attr("dy", "1.0em")
         .text(function(d) { return formatNumber(d.value); });
-    t.call(text);
+    t.call(text1);
 
     g.selectAll("rect")
-        .style("fill", function(d) { return color(d.key); });
+        .style("fill", function(d) { return color(d.key || d.name); }); //***************************************
 
     function transition(d) {
       if (transitioning || !d) return;
@@ -279,25 +275,25 @@ function main(o, data) {
       y.domain([d.y, d.y + d.dy]);
 
       // Enable anti-aliasing during the transition.
-      svg.style("shape-rendering", null);
+      svgTM.style("shape-rendering", null);
 
       // Draw child nodes on top of parent nodes.
-      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
+      svgTM.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
 
       // Fade-in entering text.
       g2.selectAll("text").style("fill-opacity", 0);
 
       // Transition to the new view.
-      t1.selectAll(".ptext").call(text).style("fill-opacity", 0);
+      t1.selectAll(".ptext").call(text1).style("fill-opacity", 0);
       t1.selectAll(".ctext").call(text2).style("fill-opacity", 0);
-      t2.selectAll(".ptext").call(text).style("fill-opacity", 1);
+      t2.selectAll(".ptext").call(text1).style("fill-opacity", 1);
       t2.selectAll(".ctext").call(text2).style("fill-opacity", 1);
       t1.selectAll("rect").call(rect);
       t2.selectAll("rect").call(rect);
 
       // Remove the old node when the transition is finished.
       t1.remove().each("end", function() {
-        svg.style("shape-rendering", "crispEdges");
+        svgTM.style("shape-rendering", "crispEdges");
         transitioning = false;
       });
     }
@@ -305,7 +301,7 @@ function main(o, data) {
     return g;
   }
 
-  function text(text) {
+  function text1(text) {
     text.selectAll("tspan")
         .attr("x", function(d) { return x(d.x) + 6; })
     text.attr("x", function(d) { return x(d.x) + 6; })
@@ -326,31 +322,12 @@ function main(o, data) {
         .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
   }
 
-  function name(d) {
+  function name(d) {            //Table Header
     return d.parent
         ? name(d.parent) + " / " + d.key + " (" + formatNumber(d.value) + ")"
         : d.key + " (" + formatNumber(d.value) + ")";
   }
-}
-
-if (window.location.hash === "") {
-    d3.json("dataTM.json", function(err, res) {
-        console.log(d3.entries(res));
-        if (!err) {
-            
-            /*res.forEach(function(row) {
-                console.log(Object.keys(row));
-            });*/
-  
-            var data = d3.nest().key(function(d) { return d.region; }).key(function(d) { return d.subregion; }).entries(res);
-            console.log(data);
-            main({title: "World Population"}, {key: "World", values: data});
-        }
-    });
-}
-
-
-
+});
 
 </script>
 </body>

@@ -1,5 +1,4 @@
-{
-	"rows":[
+[
 		{"OrderID":"10835","OrderDate":"1998-01-15 00:00:00","CustomerID":"ALFKI","EmployeeID":"1","Freight":"69.5300","ShipName":"Alfreds Futterkiste"},
 		{"OrderID":"10952","OrderDate":"1998-03-16 00:00:00","CustomerID":"ALFKI","EmployeeID":"1","Freight":"40.4200","ShipName":"Alfreds Futterkiste"},
 		{"OrderID":"11011","OrderDate":"1998-04-09 00:00:00","CustomerID":"ALFKI","EmployeeID":"3","Freight":"1.2100","ShipName":"Alfreds Futterkiste"},
@@ -51,4 +50,3 @@
 		{"OrderID":"10582","OrderDate":"1997-06-27 00:00:00","CustomerID":"BLAUS","EmployeeID":"3","Freight":"27.7100","ShipName":"Blauer See Delikatessen"},
 		{"OrderID":"10509","OrderDate":"1997-04-17 00:00:00","CustomerID":"BLAUS","EmployeeID":"4","Freight":"0.1500","ShipName":"Blauer See Delikatessen"}
 	]
-}

@@ -15,6 +15,8 @@
                                                         
                                                     </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
 
+                                                    
+                                                    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script> <!-- **************************dans celui de base....utile?  -->
     <!-- The jQuery library is a prerequisite for all jqSuite products -->
     <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script> 
     <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
@@ -38,6 +40,8 @@ div{
     font-weight: bold;
     font-size: 20px;
 }
+
+/*css for Zoomable circle*/
 
 .node {
   cursor: pointer;
@@ -64,6 +68,53 @@ div{
   pointer-events: none;
 }
 
+/*css for Tree Map*/
+#chart {
+  width: 960px;
+  height: 500px;
+  background: #ddd;
+}
+
+text {
+  pointer-events: none;
+}
+
+.grandparent text {
+  font-weight: bold;
+}
+
+rect {
+  fill: none;
+  stroke: #fff;
+}
+
+rect.parent,
+.grandparent rect {
+  stroke-width: 2px;
+}
+
+.grandparent rect {
+  fill: orange;
+}
+
+.grandparent:hover rect {
+  fill: #ee9700;
+}
+
+.children rect.parent,
+.grandparent rect {
+  cursor: pointer;
+}
+
+.children rect.parent {
+  fill: #bbb;
+  fill-opacity: .5;
+}
+
+.children:hover rect.child {
+  fill: #bbb;
+}
+
 </style>
 <body>
 <script src="//d3js.org/d3.v3.min.js"></script>
@@ -76,9 +127,9 @@ div{
     
     <table id="Selector">
     <div id="jqPager"></div></table>
-    
+        
 <br><br>
-
+    <div id="chart"></div>
 <script>
 
 var margin = 20,
@@ -92,22 +143,24 @@ var color = d3.scale.linear()
 var pack = d3.layout.pack()
     .padding(2)
     .size([diameter - margin, diameter - margin])
-    .value(function(d) {return d.size; });
+    .value(function(d) {return d.value; });
     
-var coucou=100;
 
 var svg = d3.select("body").append("svg")
     .attr("margin",20)
-    .attr("width", diameter+coucou)
-    .attr("height", diameter+coucou)
+    .attr("width", diameter)
+    .attr("height", diameter)
   .append("g")
-    .attr("transform", "translate(" + (diameter+coucou) / 2 + "," + (diameter+coucou) / 2 + ")");
+    .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
     var FilterCircle=[];  
-
-d3.json("data2.json", function(error, res) {
-
-   //----------------------------GRID ------------------------------------------
     
+d3.json("dataTM.json", function(error, res) {
+
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Grid                                           
+   //                                                                          
+   //---------------------------------------------------------------------------
 
         var csvfile=res;
         var list =JSON.stringify(csvfile);
@@ -190,9 +243,12 @@ d3.json("data2.json", function(error, res) {
                 document.getElementById("avert").innerHTML = "Le dernier element doit etre numerique!";
             }
             else{document.getElementById("avert").innerHTML = "";}
-            d3.selectAll("g > *").remove(); 
-            ZC();
+            d3.selectAll("g > *").remove();
+            document.getElementById("chart").innerHTML="";
+            
+            TM();
             grid();
+            ZC();
         }
         
         //---------------------------DataGrid-------------------------
@@ -260,9 +316,252 @@ d3.json("data2.json", function(error, res) {
             {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
         ); 
         }
-          ZC();      
-   //-------------------------------Zoomable Circle-------------------------------------------
-   function ZC()
+          TM();
+          ZC();    
+          
+          
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Tree Map                                          
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+
+   function TM()
+   {
+       
+       
+     var margin = {top: 20, right: 0, bottom: 0, left: 0},
+    width = 960,
+    height = 500 - margin.top - margin.bottom,
+    formatNumber = d3.format(",d"),
+    transitioning;
+
+var x = d3.scale.linear()
+    .domain([0, width])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, height])
+    .range([0, height]);
+
+var treemap = d3.layout.treemap()
+    .children(function(d, depth) { return depth ? null : d._children; })
+    .sort(function(a, b) { return a.value - b.value; })
+    .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
+    .round(false);
+
+var svgTM = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.bottom + margin.top)
+    .style("margin-left", -margin.left + "px")
+    .style("margin.right", -margin.right + "px")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .style("shape-rendering", "crispEdges");
+
+var grandparent = svgTM.append("g")
+    .attr("class", "grandparent");
+
+grandparent.append("rect")
+    .attr("y", -margin.top)
+    .attr("width", width)
+    .attr("height", margin.top);
+
+grandparent.append("text")
+    .attr("x", 6)
+    .attr("y", 6 - margin.top)
+    .attr("dy", ".75em");
+    
+    function wrfile()
+    {
+     var data = d3.nest();
+     if(Hierarchy.length!==0)//
+     {    
+         Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
+     }
+     else{d3.nest().key(function(d){return d;});}
+     dataArray =data.entries(res);
+
+     var file= "{\"name\": \"flare\",\"children\": [";
+
+
+     function wr(data) //rewrite a flat file as a file with parent // children
+     {
+         var i;
+         for(i=0; i<data.length; i++)
+             {
+                  if (data[i].values!==undefined)
+                  {
+                     file=file+"{\"name\": \"" + data[i].key + "\",";
+                     file=file+"\"children\": [";
+                     wr(data[i].values);
+                  }
+                  else
+                  {
+                     if(NonHierarchy.length<2)
+                     {
+                          file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
+                     }
+                     else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
+                      file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                  }
+                  if (i===data.length-1)
+                  {
+                      file=file+"]}";
+                  }
+                  else{file=file+",";}
+             }
+     }
+     wr(dataArray); 
+     var root = JSON.parse(file); 
+     return root;
+    }
+    
+    var root= wrfile(root);
+
+  initialize(root);
+  accumulate(root);
+  layout(root);
+  display(root);
+
+  function initialize(root) {
+    root.x = root.y = 0;
+    root.dx = width;
+    root.dy = height;
+    root.depth = 0;
+  }
+
+  // Aggregate the values for internal nodes. This is normally done by the
+  // treemap layout, but not here because of our custom implementation.
+  // We also take a snapshot of the original children (_children) to avoid
+  // the children being overwritten when when layout is computed.
+  function accumulate(d) {
+    return (d._children = d.children)
+        ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
+        : d.value;
+  }
+
+  // Compute the treemap layout recursively such that each group of siblings
+  // uses the same size (1×1) rather than the dimensions of the parent cell.
+  // This optimizes the layout for the current zoom state. Note that a wrapper
+  // object is created for the parent node for each group of siblings so that
+  // the parent’s dimensions are not discarded as we recurse. Since each group
+  // of sibling was laid out in 1×1, we must rescale to fit using absolute
+  // coordinates. This lets us use a viewport to zoom.
+  function layout(d) {
+    if (d._children) {
+      treemap.nodes({_children: d._children});
+      d._children.forEach(function(c) {
+        c.x = d.x + c.x * d.dx;
+        c.y = d.y + c.y * d.dy;
+        c.dx *= d.dx;
+        c.dy *= d.dy;
+        c.parent = d;
+        layout(c);
+      });
+    }
+  }
+
+  function display(d) {
+    grandparent
+        .datum(d.parent)
+        .on("click", transition)
+      .select("text")
+        .text(name(d));
+
+    var g1 = svgTM.insert("g", ".grandparent")
+        .datum(d)
+        .attr("class", "depth");
+
+    var g = g1.selectAll("g")
+        .data(d._children)
+      .enter().append("g");
+
+    g.filter(function(d) { return d._children; })
+        .classed("children", true)
+        .on("click", transition);
+
+    g.selectAll(".child")
+        .data(function(d) { return d._children || [d]; })
+      .enter().append("rect")
+        .attr("class", "child")
+        .call(rect);
+
+    g.append("rect")
+        .attr("class", "parent")
+        .call(rect)
+      .append("title")
+        .text(function(d) { return formatNumber(d.value); });
+
+    g.append("text")
+        .attr("dy", ".75em")
+        .text(function(d) { return d.name; })
+        .call(text);
+
+    function transition(d) {
+      if (transitioning || !d) return;
+      transitioning = true;
+
+      var g2 = display(d),
+          t1 = g1.transition().duration(750),
+          t2 = g2.transition().duration(750);
+
+      // Update the domain only after entering new elements.
+      x.domain([d.x, d.x + d.dx]);
+      y.domain([d.y, d.y + d.dy]);
+
+      // Enable anti-aliasing during the transition.
+      svg.style("shape-rendering", null);
+
+      // Draw child nodes on top of parent nodes.
+      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
+
+      // Fade-in entering text.
+      g2.selectAll("text").style("fill-opacity", 0);
+
+      // Transition to the new view.
+      t1.selectAll("text").call(text).style("fill-opacity", 0);
+      t2.selectAll("text").call(text).style("fill-opacity", 1);
+      t1.selectAll("rect").call(rect);
+      t2.selectAll("rect").call(rect);
+
+      // Remove the old node when the transition is finished.
+      t1.remove().each("end", function() {
+        svg.style("shape-rendering", "crispEdges");
+        transitioning = false;
+      });
+    }
+
+    return g;
+  }
+
+  function text(text) {
+    text.attr("x", function(d) { return x(d.x) + 6; })
+        .attr("y", function(d) { return y(d.y) + 6; });
+  }
+
+  function rect(rect) {
+    rect.attr("x", function(d) { return x(d.x); })
+        .attr("y", function(d) { return y(d.y); })
+        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
+        .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
+  }
+
+  function name(d) {
+    return d.parent
+        ? name(d.parent) + "." + d.name
+        : d.name;
+};
+
+   }
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Zoomable Circle                                          
+   //                                                                          
+   //---------------------------------------------------------------------------   
+   
+   function wrfile()
    {
     var data = d3.nest();
     if(Hierarchy.length!==0)//
@@ -293,7 +592,7 @@ d3.json("data2.json", function(error, res) {
                          file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
                     }
                     else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
-                     file=file + "\"size\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                     file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
                  }
                  if (i===data.length-1)
                  {
@@ -302,11 +601,18 @@ d3.json("data2.json", function(error, res) {
                  else{file=file+",";}
             }
     }
-    wr(dataArray);   
-    var root = JSON.parse(file);
+    wr(dataArray); 
+    var root = JSON.parse(file); 
+    return root;
+   }
+   
+    function ZC()
+   {
+    var rootZC = wrfile();
   if (error) throw error;
-  var focus = root,
-      nodes = pack.nodes(root),
+
+  var focus = rootZC,
+      nodes = pack.nodes(rootZC),
       view;
 
   var circle = svg.selectAll("circle")
@@ -314,45 +620,54 @@ d3.json("data2.json", function(error, res) {
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
       .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-      .on("click", function(d) {if (focus !== d) zoom(d), d3.event.stopPropagation(); else{resetFilter(); reload();} });
+      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
 
   var text = svg.selectAll("text")
       .data(nodes)
-    .enter().append("text")
+      .enter()  
+      .append("text")
       .attr("class", "label")
-      .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
-      .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
+      .style("fill-opacity", function(d) { return d.parent === rootZC ? 1 : 0; })
+      .style("display", function(d) { return d.parent === rootZC ? "inline" : "none"; })
       .text(function(d) { return d.name; });
 
   var node = svg.selectAll("circle,text");
 
   d3.select("body")
-      .style("background", color(-1))
-      .on("click", function() { zoom(root); });
-  zoomTo([root.x, root.y, root.r * 2 + margin]);
+      .style("background", "whitesmoke")
+      .on("click", function() { zoom(rootZC); });
+
+  zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
   function zoom(d) {
     var focus0 = focus; focus = d;
 
-    var transition = d3.transition()
+var transition = d3.transition()
         .duration(d3.event.altKey ? 7500 : 750)
         .tween("zoom", function(d) {
           var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
-          return function(t) { zoomTo(i(t)); }; //position (x and y) of the zoomed zone
+          return function(t) { zoomTo(i(t)); };
         });
 
-    transition.selectAll("text")
-      .filter(function(d) {return d.parent === focus || this.style.display === "inline"; }) //remove parent name
+    transition.selectAll("text")//*************************************PB**************************************
+      .filter(function(d) {if(d!==undefined){return d.parent === focus || this.style.display === "inline";} }) //remove parent name
         .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
-        .each("start", function(d) { if (d.parent === focus) {setFilter(d); this.style.display = "inline"; reload();} }) //write children name
-        .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; }); 
-    }
+        .each("start", function(d) { if (d.parent === focus) {setFilter(d); this.style.display = "inline"; reload();} }) //write children name)
+        .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  }
 
   function zoomTo(v) {
     var k = diameter / v[2]; view = v;
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
-    circle.attr("r", function(d) { return d.r * k; }); }
+    circle.attr("r", function(d) { return d.r * k; });
+  }
    }      
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Filter
+   //                                                                          
+   //--------------------------------------------------------------------------- 
    
     function setFilter(data)
     {
@@ -395,12 +710,13 @@ d3.json("data2.json", function(error, res) {
         $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');
             
         
-    }
-    
-       d3.select(self.frameElement).style("height", diameter + "px");
+    }   
+          d3.select(self.frameElement).style("height", diameter + "px");
         });
 
-    </script>
-    
+</script>
+   
     <table id="jqGrid">
     <div id="jqGridPager"></div></table>
+    
+    
