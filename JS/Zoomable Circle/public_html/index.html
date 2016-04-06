@@ -122,7 +122,7 @@ rect.parent,
     Cochez pour inclure a la hierarchie.
     <br>Un element a pour parent l'element coché au dessus de lui et pour enfant celui d'en dessous.
     <br>Le dernier element non coché correspond a la taille de la bulle, l'avant dernier a son nom.
-    <div id="avert"> </div>
+    <div id="avert"></div>
     <br>
     
     <table id="Selector">
@@ -145,15 +145,14 @@ var pack = d3.layout.pack()
     .size([diameter - margin, diameter - margin])
     .value(function(d) {return d.value; });
     
-
 var svg = d3.select("body").append("svg")
     .attr("margin",20)
     .attr("width", diameter)
     .attr("height", diameter)
   .append("g")
     .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
-    var FilterCircle=[];  
-    
+    var Filter=[];  
+    var rootZC, rootTM;
 d3.json("dataTM.json", function(error, res) {
 
    //---------------------------------------------------------------------------
@@ -163,6 +162,7 @@ d3.json("dataTM.json", function(error, res) {
    //---------------------------------------------------------------------------
 
         var csvfile=res;
+        var source;
         var list =JSON.stringify(csvfile);
         var column= d3.keys(csvfile[0]);
         
@@ -316,6 +316,7 @@ d3.json("dataTM.json", function(error, res) {
             {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
         ); 
         }
+        source="table";
           TM();
           ZC();    
           
@@ -372,63 +373,18 @@ grandparent.append("text")
     .attr("y", 6 - margin.top)
     .attr("dy", ".75em");
     
-    function wrfile()
-    {
-     var data = d3.nest();
-     if(Hierarchy.length!==0)//
-     {    
-         Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
-     }
-     else{d3.nest().key(function(d){return d;});}
-     dataArray =data.entries(res);
-
-     var file= "{\"name\": \"flare\",\"children\": [";
-
-
-     function wr(data) //rewrite a flat file as a file with parent // children
-     {
-         var i;
-         for(i=0; i<data.length; i++)
-             {
-                  if (data[i].values!==undefined)
-                  {
-                     file=file+"{\"name\": \"" + data[i].key + "\",";
-                     file=file+"\"children\": [";
-                     wr(data[i].values);
-                  }
-                  else
-                  {
-                     if(NonHierarchy.length<2)
-                     {
-                          file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
-                     }
-                     else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
-                      file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
-                  }
-                  if (i===data.length-1)
-                  {
-                      file=file+"]}";
-                  }
-                  else{file=file+",";}
-             }
-     }
-     wr(dataArray); 
-     var root = JSON.parse(file); 
-     return root;
-    }
+    rootTM= wrfile(rootTM);
     
-    var root= wrfile(root);
+  initialize(rootTM);
+  accumulate(rootTM);
+  layout(rootTM);
+  display(rootTM);
 
-  initialize(root);
-  accumulate(root);
-  layout(root);
-  display(root);
-
-  function initialize(root) {
-    root.x = root.y = 0;
-    root.dx = width;
-    root.dy = height;
-    root.depth = 0;
+  function initialize(rootTM) {
+    rootTM.x = rootTM.y = 0;
+    rootTM.dx = width;
+    rootTM.dy = height;
+    rootTM.depth = 0;
   }
 
   // Aggregate the values for internal nodes. This is normally done by the
@@ -464,7 +420,7 @@ grandparent.append("text")
 
   function display(d) {
     grandparent
-        .datum(d.parent)
+        .datum(d.parent) //**********************************************************place to go after header click
         .on("click", transition)
       .select("text")
         .text(name(d));
@@ -477,12 +433,13 @@ grandparent.append("text")
         .data(d._children)
       .enter().append("g");
 
-    g.filter(function(d) { return d._children; })
+    g.filter(function(d) {
+        return d._children;}) 
         .classed("children", true)
         .on("click", transition);
 
     g.selectAll(".child")
-        .data(function(d) { return d._children || [d]; })
+        .data(function(d) {return d._children || [d]; })
       .enter().append("rect")
         .attr("class", "child")
         .call(rect);
@@ -498,7 +455,10 @@ grandparent.append("text")
         .text(function(d) { return d.name; })
         .call(text);
 
-    function transition(d) {
+    function transition(d) { setFilter(d, "TM");
+      d;//*******************************************************
+      console.log(Filter);
+      
       if (transitioning || !d) return;
       transitioning = true;
 
@@ -531,7 +491,6 @@ grandparent.append("text")
         transitioning = false;
       });
     }
-
     return g;
   }
 
@@ -552,7 +511,7 @@ grandparent.append("text")
         ? name(d.parent) + "." + d.name
         : d.name;
 };
-
+if(source!=="table"){reload();}
    }
    
    //---------------------------------------------------------------------------
@@ -608,7 +567,7 @@ grandparent.append("text")
    
     function ZC()
    {
-    var rootZC = wrfile();
+    rootZC = wrfile();
   if (error) throw error;
 
   var focus = rootZC,
@@ -620,7 +579,7 @@ grandparent.append("text")
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
       .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+      .on("click", function(d) {setFilter(d, "ZC"); if (focus !== d) zoom(d), d3.event.stopPropagation(); });
 
   var text = svg.selectAll("text")
       .data(nodes)
@@ -633,9 +592,9 @@ grandparent.append("text")
 
   var node = svg.selectAll("circle,text");
 
-  d3.select("body")
+  d3.select("body") ///ou qu'on clique on tombe sur le recadrage par le Filtre...
       .style("background", "whitesmoke")
-      .on("click", function() { zoom(rootZC); });
+      .on("click", function(d) {resetFilter("ZC"); here=zoomHere(); zoom(here); });
 
   zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
@@ -649,10 +608,10 @@ var transition = d3.transition()
           return function(t) { zoomTo(i(t)); };
         });
 
-    transition.selectAll("text")//*************************************PB**************************************
+    transition.selectAll("text")//*************************************PB AFFICHAGE**************************************
       .filter(function(d) {if(d!==undefined){return d.parent === focus || this.style.display === "inline";} }) //remove parent name
         .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
-        .each("start", function(d) { if (d.parent === focus) {setFilter(d); this.style.display = "inline"; reload();} }) //write children name)
+        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline"; reload();} }) //write children name)
         .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
   }
 
@@ -661,6 +620,8 @@ var transition = d3.transition()
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
     circle.attr("r", function(d) { return d.r * k; });
   }
+  
+  if (source!=="table"){reload();}
    }      
    
    //---------------------------------------------------------------------------
@@ -669,47 +630,97 @@ var transition = d3.transition()
    //                                                                          
    //--------------------------------------------------------------------------- 
    
-    function setFilter(data)
+   function zoomHere()
+{
+    var retour=rootZC;
+    if(Filter.length===0){return retour;}
+    else
     {
-       FilterCircle=[];
-       while(data.parent.name!=="flare")
-       {
-           var object= new Object;
-           object.name=data.parent.name;
-           object.depth=data.depth;
-           FilterCircle.push(object);
-           data=data.parent;
-       }     
+        for(var k=0;k<Filter.length;k++)
+        {
+            for(var i=0; i<Filter.length;i++)
+            {
+                if (Filter[i].depth===k+1)
+                {
+                    for(var j=0; j<retour.children.length;j++)
+                    {
+                        if(retour.children[j].name===Filter[i].name)
+                        {
+                            retour = retour.children[j];
+                        }
+                    }
+                }
+            }
+        }
+        return retour;
+    }
+}
+
+    var FilterMap= [];
+    var FilterCircle=[];
+    function setFilter(data, source)
+    {
+       Filter=[];
+
+       if (source==="ZC")
+       {    
+            FilterCircle=[];
+            while(data.name!=="flare")
+            {
+                var object= new Object;
+                object.name=data.name;
+                object.depth=data.depth;
+                FilterCircle.push(object);
+                data=data.parent;
+            }  
+        }
+        if (source==="TM")
+        {
+            FilterMap=[];
+            while(data.name!=="flare")
+            {
+                var object= new Object;
+                object.name=data.name;
+                FilterMap.unshift(object);
+                data=data.parent;
+            }  
+            for(i=0; i<FilterMap.length;i++)
+            {
+                FilterMap[i].depth=i+1;
+            }
+        }
+        for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}
+        for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}
     }
 
-    function resetFilter()
+    function resetFilter(source)
     {
-       FilterCircle=[];   
+        if(source==="ZC")
+        {FilterCircle=[];}
+        setFilter();
+        reload();
     }
     
     function reload()
     {
-        var Filter = [];
-        for(var i=0; i<FilterCircle.length; i++)
+        var FilterTable = [];
+        for(var i=0; i<Filter.length; i++)
         {
-            
             var obj = new Object;
-            obj.field=Hierarchy[(FilterCircle[i].depth)-2];
+            obj.field=Hierarchy[(Filter[i].depth)-1];
             obj.op="eq";
-            obj.data=FilterCircle[i].name;
-            Filter.push(obj);
+            obj.data=Filter[i].name;
+            FilterTable.push(obj);
         }
             $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
             {
                 filters: JSON.stringify
                 ({
                     groupOp: "AND",
-                    rules: Filter
+                    rules: FilterTable
                 })
             });
         $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');
-            
-        
     }   
           d3.select(self.frameElement).style("height", diameter + "px");
         });
