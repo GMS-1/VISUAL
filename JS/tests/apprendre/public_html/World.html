@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+  <script src="datamaps-0.5.0/src/js/components/d3/d3.min.js"></script>
+  <script src="datamaps-0.5.0/src/js/components/topojson/topojson.js"></script>
+  <!-- I recommend you host this file on your own, since this will change without warning -->
+  <script src="datamaps.world.min.js"></script>
+
+  <div id="container1"></div>
+ 
+     
+     <script>
+       //basic map config with custom fills, mercator projection
+      var map = new Datamap({
+        scope: 'world',
+        element: document.getElementById('container1'),
+        projection: 'mercator',
+        height: 800,
+        width: 1000,
+        fills: {
+          defaultFill: '#f0af0a',
+          lt50: 'rgba(0,244,244,0.9)',
+          gt50: 'red'
+        },
+        
+
+      })
+       
+     </script>
+</body>

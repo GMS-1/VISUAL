@@ -60,24 +60,9 @@ Generic treemap, based on http://bost.ocks.org/mike/treemap/
             <a href="TreeMap.html">Tree Map</a><br>
             <a href="bubble.html">Bubble</a><br>
             <a href="TMtest.html">TMtest</a><br>
+            <a href="World.html">World</a><br>
+            <a href="Requete.html">Requete</a><br>
         </div>
-    
-<div id="chart"></div>
-
-<script>
-    
-    d3.csv("age.csv", function(err, res) {   
-        for(i=0; i<res.length; i++)
-        {
-            res[i].flare=5;
-        }
-        console.log(res);
-        var data = d3.nest().key(function(d) { return d.flare; }).key(function(d) { return d.age; }).key(function(d) { return d.year; }).entries(res);
-console.log(data);
-
-    });
-
-</script>
 
 </body>
 </html>

@@ -55,16 +55,19 @@ div{
   fill: white;
 }
 
-.label {
-  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
-  text-anchor: middle;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+.label,
+.node--root{
+  pointer-events: none;
 }
 
-.label,
-.node--root,
-.node--leaf {
-  pointer-events: none;
+.label {
+  font: 15px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  fill: #000033;
+  font-weight: bold;
+  opacity:0,5;
+  stroke:0px;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0px 0 0 #fff, 0 0px 0 #fff;
 }
 
 /*css for Tree Map*/
@@ -108,11 +111,12 @@ rect.parent,
 }
 
 .children rect.parent {
-  fill-opacity: .5;
+  fill-opacity: 1;
 }
 
 .children:hover rect.child {
   fill: #bbb;
+  fill-opacity: 0.5;
 }
 
 </style>
@@ -243,6 +247,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
                     if(data[i].nom===notInHierarchy[j]){NonHierarchy.push(notInHierarchy[j]);}
                 }
             }
+            
             if(isNaN(res[0][NonHierarchy[NonHierarchy.length-1]]))
             {
                 document.getElementById("avert").innerHTML = "Le dernier element doit etre numerique!";
@@ -253,12 +258,43 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             Filter=[];
             FilterCircle=[];
             FilterMap=[];
-            ZC();
-            TM();
-        }
+            if(Hierarchy.length!==1)
+            {
+                ZC();
+                TM();
+            }
+            else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
+
+            var GroupField= "[";
+            
+            for (var i=1; i<Hierarchy.length;i++)
+            {
+                GroupField = GroupField + "\"" + Hierarchy[i] + "\",";
+            }
+            if(Hierarchy.length!==1){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
+            else{GroupField=GroupField+ "]";}
+            GroupField=eval(GroupField);
+
+            $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
+            }
         
         //---------------------------DataGrid-------------------------
+       
         
+    function what1000Separator() {
+        var n = 1234.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+    function whatDecimalSeparator() {
+        var n = 4.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+
+        
+        var thousand = what1000Separator();
+        var decimal=whatDecimalSeparator();
         
         var colModelList= "[";
         for (var i=0; i<column.length;i++)
@@ -269,15 +305,12 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             }
             else
             {
-                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\", summaryType: \"sum\"},";
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<b>{0}</b>\", summaryType: \"sum\"},";
             }
         }
         colModelList = colModelList.substring(0, colModelList.length-1) + "]";
         colModelList = eval(colModelList);
-        grid();
-        
-        function grid()
-        {            
+       
         var GroupField= "[";
         for (var i=0; i<Hierarchy.length;i++)
         {
@@ -285,6 +318,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
         }
         if(Hierarchy.length!==0){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
         else{GroupField=GroupField+ "]";}
+        
         GroupField=eval(GroupField);
         
         $("#jqGrid").jqGrid({
@@ -309,7 +343,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
                 groupCollapse: false
             }
         });  
-        
         $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
         
         $("#jqGrid").gridResize();
@@ -321,12 +354,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             {}, // settings for delete
             {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
         ); 
-        }
         
+        if(Hierarchy.length!==0)
+        {
         source="table"; 
           ZC();
           TM();
-          
+        }
+        else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
           
    //---------------------------------------------------------------------------
    //                                                                           
@@ -445,29 +480,37 @@ grandparent.append("text")
         .classed("children", true)
         .on("click", transition);
 
+
+
+    g.append("rect")
+        .attr("class", "parent")
+        .call(rect);
+      
+      
     g.selectAll(".child")
         .data(function(d) {return d._children || [d]; })
       .enter().append("rect")
         .attr("class", "child")
-        .call(rect);
-
-    g.append("rect")
-        .attr("class", "parent")
-        .call(rect)
-      .append("title")
-      .text(function(d) {return formatNumber(d.value); });
+        .call(rect).append("title")
+      .text(function(d) {return d.name + " ; " + d.value.toLocaleString(); });
 
     g.append("text")
      .attr("dy", ".75em")
-     .text(function(d) { if(d.name!=="undefined") {return d.name;} else {return "click here";}})
+     .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value;} else {return "click here";}})
      .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;})
-     .attr("y", function(d){console.log(d); fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ; console.log(pos);return pos+6;});
+     .attr("y", function(d){ fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ;return pos+6;})
+     .attr("fill", "white")
+     .attr("font-size", "20");
         
     var circle = svg.selectAll("circle")
-        .on("click", function(d) {setFilter(d, "ZC");transition(d); });
+        .on("click", function(d) {transition(d); });
       
     function transition(d) {
-      if(d!==0){setFilter(d, "TM");}
+      if(d!==0){
+        if (d._children===undefined && d.children===undefined)
+            {setFilter(d.parent, "TM");}
+        else{setFilter(d, "TM");}
+      }
       d=zoomHereT();
       if (transitioning || !d) return;
       transitioning = true;
@@ -490,8 +533,6 @@ grandparent.append("text")
      // g2.selectAll("text").style("fill-opacity", 0);
      
       // Transition to the new view.
-   //   t1.selectAll("text").call(text).style("fill-opacity", 0);
-   //   t2.selectAll("text").call(text).style("fill-opacity", 1);
       t1.selectAll("rect").call(rect);
       t2.selectAll("rect").call(rect);
 
@@ -504,11 +545,6 @@ grandparent.append("text")
  
     return g;
   }
-
-  /*function text(text) {
-    text.attr("x", function(d) { return x(d.x) + 6; })
-        .attr("y", function(d) { return y(d.y) + 6; });
-  }*/
 
   function rect(rect) {
     rect.attr("x", function(d) { return x(d.x); })
@@ -583,28 +619,31 @@ if(source!=="table"){reload();}
     rootZC = wrfile();
   if (error) throw error;
 
+
   var focus = rootZC,
       nodes = pack.nodes(rootZC),
       view;
-
-  var circle = svg.selectAll("circle")
+      
+     var circle = svg.selectAll("circle")
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
       .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-      .on("click", function(d) {setFilter(d, "ZC"); if (focus !== d) zoom(d), d3.event.stopPropagation(); });
-
-  var text = svg.selectAll("text")
+      .on("click", function(d) {setFilter(d, "ZC"); if (focus !== d) zoom(d), d3.event.stopPropagation(); });           
+    
+      var text = svg.selectAll("text")
       .data(nodes)
       .enter()  
       .append("text")
       .attr("class", "label")
       .style("fill-opacity", function(d) { return d.parent === rootZC ? 1 : 0; })
       .style("display", function(d) { return d.parent === rootZC ? "inline" : "none"; })
-      .text(function(d) { return d.name; });
+      .text(function(d) {if(d.name!=="undefined") {return d.name;} else {return "click to start";} });
+    
+    var node = svg.selectAll("circle,text");   
 
-  var node = svg.selectAll("circle,text");   
-  
+    circle.append("title").text(function (d){return d.name + " ; " + d.value.toLocaleString();});
+
   d3.select("body")
       .style("background", "whitesmoke")
       .on("click", function() {resetFilter("ZC"); here=zoomHere(); zoom(here); });      
@@ -766,7 +805,7 @@ var transition = d3.transition()
                     rules: FilterTable
                 })
             });
-        $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');        
+        $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');   
     }   
        
     }

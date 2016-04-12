@@ -112,17 +112,7 @@ grandparent.append("text")
     
        
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
 
 d3.json("dataTM.json", function(res) {
     
@@ -181,12 +171,7 @@ d3.json("dataTM.json", function(res) {
     
     
     var root= wrfile(root);
-    
-    console.log(root);
-    
-    
-    
-    console.log(root);
+   
   initialize(root);
   accumulate(root);
   layout(root);
@@ -304,6 +289,7 @@ d3.json("dataTM.json", function(res) {
   }
 
   function text(text) {
+      console.log(text);
     text.attr("x", function(d) { return x(d.x) + 6; })
         .attr("y", function(d) { return y(d.y) + 6; });
   }

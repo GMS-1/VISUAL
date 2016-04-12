@@ -21,9 +21,7 @@
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
 
-.label,
-.node--root,
-.node--leaf {
+.label{
   pointer-events: none;
 }
 
@@ -43,7 +41,7 @@ var color = d3.scale.linear()
 var pack = d3.layout.pack()
     .padding(2)
     .size([diameter - margin, diameter - margin])
-    .value(function(d) { return d.size; });
+    .value(function(d) { return d.size; })
 
 var svg = d3.select("body").append("svg")
     .attr("width", diameter)
@@ -72,6 +70,8 @@ d3.json("dataZC.json", function(error, root) {
       .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
       .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
       .text(function(d) { return d.name; });
+      
+      circle.append("title").text(function (d){return d.name + " ; " + d.value.toLocaleString();});
 
   var node = svg.selectAll("circle,text");
 
