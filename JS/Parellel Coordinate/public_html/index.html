@@ -62,7 +62,7 @@ svg {
 <button onclick="abortRead();">Cancel read</button>
 <div id="progress_bar"><div class="percent">0%</div></div>
     
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="d3.min.js"></script>
 
  <script>
 var e_rfndmeclientid = 2243778;
@@ -354,6 +354,7 @@ var OpenAlert=0;
         if (source==="BarChart"){(d3.selectAll("g.axis.x")).remove();(d3.selectAll("g.axis.y")).remove();(d3.selectAll("g.legend")).remove();(d3.selectAll("g.state")).remove();BarChart();}
         if (source==="table")
         {
+            console.log(FilterGlob);
             $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
             {
                 filters: JSON.stringify
