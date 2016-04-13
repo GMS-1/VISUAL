@@ -34,11 +34,39 @@ div{
  float: left;
 } 
 
+.TableTitle1{
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.TableTitle2{
+    font-size: 15px;
+}
+
+.TableTitle3{
+    font-weight: bold;
+}
+
 #avert
 {
     color: red;
     font-weight: bold;
     font-size: 20px;
+}
+
+#tooltip {
+  position: absolute;
+  width: 220px;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 2px 6px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+#tooltip.hidden {
+  display: none;
 }
 
 /*css for Zoomable circle*/
@@ -89,7 +117,7 @@ text {
 }
 
 rect {
-  stroke-width:1,5px;
+  stroke-width:2px;
   stroke: #fff;
 }
 
@@ -116,7 +144,13 @@ rect.parent,
 }
 
 .children:hover rect.child {
+  fill: #eee;
+  fill-opacity: 0.5;
+}
+
+.children rect.child {
   fill: #bbb;
+  cursor: pointer;
   fill-opacity: 0.5;
 }
 
@@ -131,8 +165,8 @@ rect.parent,
     <br><br><br>
     
     <table id="Selector">
-    <div id="jqPager"></div></table>
-        
+    <div id="jqPager"></div></table>    
+    
     <div id="chart"></div>
 <script>
 
@@ -211,7 +245,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             }
         });  
         
-        $("#Selector").gridResize();
         $("#Selector").sortableRows(
                 {update: function(){var rowData = $("#Selector").jqGrid("getRowData");addToHierarchy(rowData);orderHierarchy(rowData);}
         }); 
@@ -302,13 +335,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
         {
             if(isNaN(res[0][column[i]]))
             {
-                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\"},";
+                colModelList = colModelList + "{ name: '"+ column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\"},";
             }
             else
             {
-                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<b>{0}</b>\", summaryType: \"sum\"},";
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<div class='TableTitle2'>{0}</div>\", summaryType: \"sum\"},";
             }
         }
+        
         colModelList = colModelList.substring(0, colModelList.length-1) + "]";
         colModelList = eval(colModelList);
        
@@ -339,8 +373,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             groupingView:
             {
                 groupField: GroupField,
-                groupSummary: [true, true],
-                groupSummaryPos: ['header', 'header'],
+                groupSummary: [false, false, false],
+                groupText:['<div class=\"TableTitle1\">{0}</div>', '<div class=\"TableTitle2\">{0}</div>', '<div class=\"TableTitle3\">{0}</div>'],
                 groupCollapse: false
             }
         });  
@@ -481,23 +515,21 @@ grandparent.append("text")
         .classed("children", true)
         .on("click", transition);
 
-
-
     g.append("rect")
         .attr("class", "parent")
         .call(rect);
-      
       
     g.selectAll(".child")
         .data(function(d) {return d._children || [d]; })
       .enter().append("rect")
         .attr("class", "child")
-        .call(rect).append("title")
-      .text(function(d) {return d.name + " ; " + d.value.toLocaleString(); });
+        .call(rect)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
 
     g.append("text")
      .attr("dy", ".75em")
-     .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value;} else {return "click here";}})
+     .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value.toLocaleString();} else {return "click here";}})
      .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;})
      .attr("y", function(d){ fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ;return pos+6;})
      .attr("fill", "white")
@@ -545,7 +577,7 @@ grandparent.append("text")
     }
  
     return g;
-  }
+  } 
 
   function rect(rect) {
     rect.attr("x", function(d) { return x(d.x); })
@@ -643,11 +675,14 @@ if(source!=="table"){reload();}
     
     var node = svg.selectAll("circle,text");   
 
-    circle.append("title").text(function (d){return d.name + " ; " + d.value.toLocaleString();});
+    circle.on("mousemove", mousemove)
+        .on("mouseout", mouseout);
 
-  d3.select("body")
+  d3.select("body").selectAll("g, #chart")
       .style("background", "whitesmoke")
-      .on("click", function() {resetFilter("ZC"); here=zoomHere(); zoom(here); });      
+      .on("click", function() {
+          resetFilter("ZC");
+          here=zoomHere(); zoom(here); });
       
   zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
@@ -663,7 +698,7 @@ var transition = d3.transition()
     transition.selectAll("text")
       .filter(function(d) {if(d!==undefined){ return d.parent === focus || this.style.display === "inline";} }) //remove parent name
         .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
-        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline"; reload();} }) //write children name)
+        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline";} }) //write children name)
         .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
   }
 
@@ -675,6 +710,33 @@ var transition = d3.transition()
   
   if (source!=="table"){reload();}
    }      
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           mouse bloc
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+   
+       var mousemove = function(d) {
+
+        d3.select("#tooltip")
+            .style("position", "absolute")
+            .style("width", "auto")
+            .style("min-width", "150px")
+            .style("height", "auto")
+            .style("left", event.pageX+15 + "px")
+            .style("top", event.pageY-60 + "px");
+        d3.select("#tooltip #name")
+          .text(function(){if(d.name!=="undefined") {return d.name;} else {return "global";}});
+        d3.select("#tooltip #value")
+          .text(d.value.toLocaleString());
+        d3.select("#tooltip").classed("hidden", false);
+    };
+
+    var mouseout = function() {
+        d3.select("#tooltip").classed("hidden", true);
+    };
+   
    
    //---------------------------------------------------------------------------
    //                                                                           
@@ -776,6 +838,7 @@ var transition = d3.transition()
 
     function resetFilter(source)
     {
+
         if(source==="ZC")
         {FilterCircle=[];}
         if(source==="all")
@@ -783,7 +846,7 @@ var transition = d3.transition()
             FilterCircle=[];
             FilterMap=[];
         }
-        setFilter();
+        setFilter();    
         reload();
     }
     
@@ -798,22 +861,27 @@ var transition = d3.transition()
             obj.data=Filter[i].name;
             FilterTable.push(obj);
         }
-            $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
-            {
-                filters: JSON.stringify
-                ({
-                    groupOp: "AND",
-                    rules: FilterTable
-                })
-            });
+        $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
+        {
+            filters: JSON.stringify
+            ({
+                groupOp: "AND",
+                rules: FilterTable
+            })
+        });
         $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');   
-    }   
+    }
        
     }
 
 </script>
-   
+
     <table id="jqGrid">
     <div id="jqGridPager"></div></table>
+    
+    <div id="tooltip" class="hidden">
+        <strong id="name"></strong><br/>
+    <span id="value"></span>
+    </div>
     
 </body>
