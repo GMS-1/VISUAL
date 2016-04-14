@@ -96,7 +96,7 @@
     "value": 9235100
   },
   {
-    "name": "Bahamas",
+    "name": "The Bahamas",
     "region": "Americas",
     "subregion": "Caribbean",
     "value": 2
@@ -330,7 +330,7 @@
     "value": 4667096
   },
   {
-    "name": "C�te d'Ivoire",
+    "name": "Ivory Coast",
     "region": "Africa",
     "subregion": "Western Africa",
     "value": 2
@@ -564,7 +564,7 @@
     "value": 10824200
   },
   {
-    "name": "Guinea-Bissau",
+    "name": "Guinea Bissau",
     "region": "Africa",
     "subregion": "Western Africa",
     "value": 1704000
@@ -1080,7 +1080,7 @@
     "value": 2024707
   },
   {
-    "name": "Republic of Kosovo",
+    "name": "Kosovo",
     "region": "Europe",
     "subregion": "Eastern Europe",
     "value": 1733842
@@ -1182,7 +1182,7 @@
     "value": 13567338
   },
   {
-    "name": "Serbia",
+    "name": "Republic of Serbia",
     "region": "Europe",
     "subregion": "Southern Europe",
     "value": 7181505
@@ -1326,7 +1326,7 @@
     "value": 8000000
   },
   {
-    "name": "Tanzania",
+    "name": "United Republic of Tanzania",
     "region": "Africa",
     "subregion": "Eastern Africa",
     "value": 44928923
@@ -1338,7 +1338,7 @@
     "value": 65926261
   },
   {
-    "name": "Timor-Leste",
+    "name": "East Timor",
     "region": "Asia",
     "subregion": "South-Eastern Asia",
     "value": 2
@@ -1374,7 +1374,7 @@
     "value": 10833431
   },
   {
-    "name": "Turname",
+    "name": "Turkey",
     "region": "Asia",
     "subregion": "Western Asia",
     "value": 75627384
@@ -1422,7 +1422,7 @@
     "value": 63705000
   },
   {
-    "name": "United States",
+    "name": "United States of America",
     "region": "Americas",
     "subregion": "Northern America",
     "value": 317101000

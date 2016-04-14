@@ -7,32 +7,30 @@
   <script src="datamaps-0.5.0/dist/datamaps.world.min.js"></script>
   <script src="datamaps-0.5.0/dist/datamaps.all.min.js"></script>
 
- <!-- <div id="container" style="position: relative; width: 1000px; height: 500px;"></div>  -->
+  <!--<div id="container" style="position: relative; width: 1000px; height: 700px;"></div> 
+  <div id="bubbles" style="position: relative; width: 1000px; height: 700px;"></div> -->
 
 
  <style>
-    .state:hover{
-        fill: #bbb;
-    }
      
-    #state-borders {
-        fill: none;
-        stroke: #fff;
-        stroke-width: 1px;
-        stroke-linejoin: round;
-        stroke-linecap: round;
-        pointer-events: none;
-      }
+    .bubble{
+        pointer-events:none;
+    }
+    
+    .gr:hover{
+        fill: #bbb;
+        opacity:0.8;
+    }
      
  </style>
     
     <script>
-    /*var map = new Datamap({
+ /*   var map = new Datamap({
         element: document.getElementById('container'),
-        scope: 'usa'
-    });*/
-    
-
+        projection: 'mercator',
+        scope: 'world'
+    });
+*/
     var width = 1260,
         height = 1060;
 
@@ -44,53 +42,188 @@
     var path = d3.geo.path()
         .projection(projection);
 
-    var svg = d3.select("body").append("svg")
+    var svg2 = d3.select("body").append("svg")
         .attr("width", width)
-        .attr("height", height)
-        .attr("fill", "steelblue");
+        .attr("height", height);
 
     d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {
-        console.log(map);
-        for (var i=0; i<map.objects.world.geometries.length; i++)
-        {
-        svg.append("path")
-            .attr("class", "state")
-            .datum(topojson.feature(map, map.objects.world.geometries[i]))
-            .attr("d", path)
-            .on("click", function(d){clicked(d);});
-    
-        svg.append("path")
-            .datum(topojson.feature(map, map.objects.world.geometries[i], function(a, b) { return a !== b; }))
-            .attr("id", "state-borders")
-            .attr("d", path);
-      
-        }
+        d3.json("dataTM.json", function(err, res){
+            console.log(res);
+            var tableres=res.map(function(g){return g.name;});
+            var tableworld= map.objects.world.geometries.map(function(g){return g.properties.name;});
+
+
+            var features= map.objects.world.geometries
+                .map(function(g) {return topojson.feature(map, g)});
+            
+             svg2.selectAll(".state")
+                .data(features)
+                .enter()
+                .append("path")
+                .attr("class",function(d) {return "state " + d.id;})
+                .attr("d", path)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", "1")
+                .attr("opacity", 0.7)
+                .attr("fill", "#33a7c2")
+                .on("mouseenter", hovered)
+                .on("mouseleave", nothovered)
+                .on("click", function(d){clicked(d);});
+                     
+
+            svg2.append("g")
+                .selectAll("circle")
+                .data(topojson.feature(map, map.objects.world).features)
+                .enter().append("circle")
+                .attr("class", function(d) {return "bubble " + d.id;})
+                .attr("transform", function(d) {if(d.id!=="USA" && d.id!=="NOR"){ return "translate(" + path.centroid(d) + ")";} else if (d.id==="USA"){var tr=[path.centroid(d)[0]+90,path.centroid(d)[1]+60]; return "translate(" + tr + ")";} else{var tr=[path.centroid(d)[0]-28,path.centroid(d)[1]+100]; return "translate(" + tr + ")";}})
+                .attr("r", function(d){return sizeBubble(d.properties.name);})
+                .attr("fill", "#308cb4")
+                .attr("stroke", "#bbb")
+                .attr("opacity", 0.8);
+                
+            
+            function hovered()
+            {
+                var radialGradient = svg2.append("defs")
+                    .append("radialGradient")
+                    .attr("id", "radial-gradient");
+
+                radialGradient.append("stop")
+                  .attr("offset", "00%")
+                  .attr("stop-color", "#308cb4");
+
+                radialGradient.append("stop")
+                    .attr("offset", "70%")
+                    .attr("stop-color", "#3170b0");
+            
+                var name="."+event.path[0].__data__.id;
+                
+                svg2.selectAll(name).attr("fill", "#4dc2ca");
+                d3.selectAll(".bubble" + name).attr("stroke-width", 2).style("fill", "url(#radial-gradient)");//.attr("r", );
+            }
+            
+            function nothovered()
+            {
+                var name="."+event.path[0].__data__.id;
+                d3.selectAll(name).attr("fill", "#33a7c2");
+                d3.selectAll(".bubble" + name).attr("stroke-width", 1).style("fill", "#308cb4");
+            }
+                        
+            function sizeBubble(d)
+            {
+                for(var i=0; i<tableres.length; i++)
+                {
+                    if(tableres[i]===d)
+                    {return Math.log((res[i].value/20000000)+1)*10;}
+                }
+                return 0;
+            }
+        
+        });
+        
     });    
     
+    /*
+    var bubble_map = new Datamap({
+        element: document.getElementById("bubbles"),
+        projection: 'mercator',
+        geographyConfig: {
+          popupOnHover: false,
+          highlightOnHover: false
+        },
+        fills: {
+            defaultFill: '#ABDDA4',
+            USA: 'blue',
+            RUS: 'red'
+          }
+        });
+        bubble_map.bubbles([
+            {
+              name: 'Not a bomb, but centered on Brazil',
+              radius: 23,
+              centered: 'BRA',
+              country: 'USA',
+              yeild: 0,
+              fillKey: 'USA',
+              date: '1954-03-01'
+            },
+            {
+              name: 'Castle Bravo',
+              radius: 25,
+              yeild: 15000,
+              country: 'USA',
+              fillKey: 'USA',
+              date: '1954-03-01',
+              latitude: 11.415,
+              longitude: 165.1619
+            },{
+              name: 'Tsar Bomba',
+              radius: 70,
+              yeild: 50000,
+              country: 'USSR',
+              fillKey: 'RUS',
+              significance: 'Largest thermonuclear weapon ever tested—scaled down from its initial 100 Mt design by 50%',
+              date: '1961-10-31',
+              latitude: 73.482,
+              longitude: 54.5854
+            }
+        ], 
+        {
+        popupTemplate: function(geo, data) {
+            return '<div class="hoverinfo">Yield:' + data.yeild + 'Exploded on ' + data.date + ' by the '  + data.country + '';
+        }
+    });*/
+
+
+    var centered;
     function clicked(d) {
-        console.log(d);
-    var x, y, k;
-    
-    if (d && centered !== d) {
-      var centroid = path.centroid(d);
-      x = centroid[0];
-      y = centroid[1];
-      k = 4;
-      centered = d;
-    } else {
-      x = width / 2;
-      y = height / 2;
-      k = 1;
-      centered = null;
-    }
 
-    svg.selectAll("path")
-        .classed("active", centered && function(d) { return d === centered; });
+        var x, y, k, opa, p_evt;
+console.log(path.centroid(d));
+        if (d && centered !== d) {
+          var centroid = path.centroid(d);
+          x = centroid[0];
+          y = centroid[1];
+          opa=0;
+          k=2;
+          p_evt="none";
+          centered = d;
+        } 
+        else {
+          x = width / 2;
+          y = height / 2;
+          opa=1;
+          k=1;
+          p_evt="all";
+          centered = null;
+        }    
 
-    svg.transition()
-        .duration(750)
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-        .style("stroke-width", 1.5 / k + "px");
+        name="."+d.id;
+        svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
+        
+        svg2.selectAll(".state" + name ).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+            .attr("opacity", 1)
+            .attr("pointer-events", "all")
+            .style("stroke-width", 1.5 / k + "px");
+            
+            if(opa===0)
+            {var a=0, b=0;
+                if (name===".USA"){a=90;b=60;}
+                if (name===".NOR"){a=-28;b=100;}
+
+        svg2.selectAll(".bubble"+name).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" +centroid[0] +","+ centroid[1]+")translate(" + a + "," + b + " )");//310 et 380 doivent correspondre a la pos init
+            }
+            else{
+                svg2.selectAll(".bubble"+name).transition()
+                .duration(750)
+                .attr("transform", function(d) {if(d.id!=="USA" && d.id!=="NOR"){ return "translate(" + path.centroid(d) + ")";} else if (d.id==="USA"){var tr=[path.centroid(d)[0]+90,path.centroid(d)[1]+60]; return "translate(" + tr + ")";} else{var tr=[path.centroid(d)[0]-28,path.centroid(d)[1]+100]; return "translate(" + tr + ")";}})
+                
+            }
     }
 
 </script>

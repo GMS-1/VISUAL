@@ -26,6 +26,10 @@
     
     <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
+    
+    <script src="datamaps-0.5.0/src/js/components/topojson/topojson.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.world.min.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.all.min.js"></script>
    
 <meta charset="utf-8">
 <style>
@@ -143,17 +147,27 @@ rect.parent,
   fill-opacity: 1;
 }
 
-.children:hover rect.child {
+.children:hover rect.child{
   fill: #eee;
-  fill-opacity: 0.5;
+  fill-opacity: 0.3;
 }
 
 .children rect.child {
   fill: #bbb;
   cursor: pointer;
-  fill-opacity: 0.5;
+  fill-opacity: 0.1;
 }
 
+/*css map*/
+.bubble{
+    pointer-events:none;
+}
+
+.gr:hover{
+    fill: #bbb;
+    opacity:0.8;
+}
+        
 </style>
 <body>
 <script src="d3.min.js"></script>
@@ -168,6 +182,9 @@ rect.parent,
     <div id="jqPager"></div></table>    
     
     <div id="chart"></div>
+    <div id="carte"></div>
+    <div id="ZC"></div>
+    
 <script>
 
 var margin = 20,
@@ -193,12 +210,13 @@ var svg = d3.select("body").append("svg")
     var rootZC, rootTM;
     
     
-    
-d3.json("dataTM.json", function(error, res) { main(error, res);}); 
+d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {    
+d3.json("dataTM.json", function(error, res) { main(error, res, map);}); 
 //d3.csv("age.csv", function(error, res){ main(error, res);});
+});
 
-
-    function main (error, res){
+    function main (error, res, map){
+        
    //---------------------------------------------------------------------------
    //                                                                           
    //                            Grid                                           
@@ -289,6 +307,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             else{document.getElementById("avert").innerHTML = "";}
             d3.selectAll("g > *").remove();
             document.getElementById("chart").innerHTML="";
+            document.getElementById("carte").innerHTML="";
             Filter=[];
             FilterCircle=[];
             FilterMap=[];
@@ -296,6 +315,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
             {
                 ZC();
                 TM();
+                Carte();
             }
             else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
 
@@ -375,6 +395,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
                 groupField: GroupField,
                 groupSummary: [false, false, false],
                 groupText:['<div class=\"TableTitle1\">{0}</div>', '<div class=\"TableTitle2\">{0}</div>', '<div class=\"TableTitle3\">{0}</div>'],
+                groupSummaryPos: ['header', 'header', 'header'],
                 groupCollapse: false
             }
         });  
@@ -395,9 +416,151 @@ d3.json("dataTM.json", function(error, res) { main(error, res);});
         source="table"; 
           ZC();
           TM();
+          Carte();
         }
         else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
-          
+         
+
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           Carte
+   //                                                                          
+   //---------------------------------------------------------------------------
+      function Carte()
+      {
+        var width = 1000,
+            height = 700;
+
+        var projection = d3.geo.mercator()
+            .center([0, 0])
+            .scale(110)
+            .translate([width / 2, height / 2]);
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+        var svg2 = d3.select("#carte").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+   
+            var tableres=res.map(function(g){return g.key;});
+            var features= map.objects.world.geometries
+                .map(function(g) {return topojson.feature(map, g)});
+            
+             svg2.selectAll(".state")
+                .data(features)
+                .enter()
+                .append("path")
+                .attr("class",function(d) {return "state " + d.id;})
+                .attr("d", path)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", "1")
+                .attr("opacity", 0.7)
+                .attr("fill", "#33a7c2")
+                .on("mouseenter", hovered)
+                .on("mouseleave", nothovered)
+                .on("click", function(d){/*setFilter(d, "Carte");*/clicked(d);});
+                     
+
+            svg2.append("g")
+                .selectAll("circle")
+                .data(topojson.feature(map, map.objects.world).features)
+                .enter().append("circle")
+                .attr("class", function(d) {return "bubble " + d.id;})
+                .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")";} )
+                .attr("r", function(d){ return sizeBubble(d.properties.name);})
+                .attr("fill", "#308cb4")
+                .attr("stroke", "#bbb")
+                .attr("opacity", 0.8);
+                
+            
+            function hovered()
+            {
+                var radialGradient = svg2.append("defs")
+                    .append("radialGradient")
+                    .attr("id", "radial-gradient");
+
+                radialGradient.append("stop")
+                  .attr("offset", "00%")
+                  .attr("stop-color", "#308cb4");
+
+                radialGradient.append("stop")
+                    .attr("offset", "70%")
+                    .attr("stop-color", "#3170b0");
+            
+                var name="."+event.path[0].__data__.id;
+                
+                svg2.selectAll(name).attr("fill", "#4dc2ca");
+                d3.selectAll(".bubble" + name).attr("stroke", "#fff").style("fill", "url(#radial-gradient)");
+            }
+            
+            function nothovered()
+            {
+                var name="."+event.path[0].__data__.id;
+                d3.selectAll(name).attr("fill", "#33a7c2");
+                d3.selectAll(".bubble" + name).attr("stroke", "#bbb").style("fill", "#308cb4");
+            }
+                        
+            function sizeBubble(d)
+            {
+                for(var i=0; i<tableres.length; i++)
+                {
+                    if(tableres[i]===d)
+                    {return Math.log((res[i].value/20000000)+1)*6;}
+                }
+                return 0;
+            }
+   
+   
+   
+   
+   var centered;
+    function clicked(d) {
+
+        var x, y, k, opa, p_evt;
+        if (d && centered !== d) {
+          var centroid = path.centroid(d);
+          x = centroid[0];
+          y = centroid[1];
+          opa=0;
+          k=2;
+          p_evt="none";
+          centered = d;
+        } 
+        else {
+          x = width / 2;
+          y = height / 2;
+          opa=1;
+          k=1;
+          p_evt="all";
+          centered = null;
+        }    
+
+        name="."+d.id;
+        svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
+        
+        svg2.selectAll(".state" + name ).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+            .attr("opacity", 1)
+            .attr("pointer-events", "all")
+            .style("stroke-width", 1.5 / k + "px");
+            
+            if(opa===0)
+            {
+                svg2.selectAll(".bubble"+name).transition()
+            .duration(750)
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" +centroid[0] +","+ centroid[1]+")");//310 et 380 doivent correspondre a la pos init
+            }
+            else{
+                svg2.selectAll(".bubble"+name).transition()
+                    .duration(750)
+                    .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});
+                
+            }
+        }
+    }
+        
    //---------------------------------------------------------------------------
    //                                                                           
    //                            Tree Map                                          
@@ -597,6 +760,7 @@ grandparent.append("text")
 if(source!=="table"){reload();}
    }
    
+   
    //---------------------------------------------------------------------------
    //                                                                           
    //                            Zoomable Circle                                          
@@ -709,7 +873,8 @@ var transition = d3.transition()
   }
   
   if (source!=="table"){reload();}
-   }      
+   }
+   
    
    //---------------------------------------------------------------------------
    //                                                                           
@@ -802,7 +967,6 @@ var transition = d3.transition()
     function setFilter(data, source)
     {
        Filter=[];
-
        if (source==="ZC")
        {    
             FilterCircle=[];
@@ -821,7 +985,6 @@ var transition = d3.transition()
             FilterMap=[];
             while(data.name!=="flare")
             {
-                
                 var object= new Object;
                 object.name=data.name;
                 FilterMap.unshift(object);
@@ -832,10 +995,28 @@ var transition = d3.transition()
                 FilterMap[i].depth=i+1;
             }
         }
+        console.log(rootZC);
+        if (source==="Carte")
+        {
+            console.log(data.properties.name);
+            var tab=rootZC;
+            searchin(tab, data.properties.name);
+            
+        }
         if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
         if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
     }
-
+    
+    function searchin(tab, name)
+    {
+        console.log(tab);
+        for(i=0; i<tab.children.length; i++)
+        {console.log(tab[i]);
+            if(tab.children[i]!==undefined){console.log(tab.children[i]); searchin(tab.children[i], name);}
+            else if (tab[i]===name){return tab[i];}
+        }
+    }
+    
     function resetFilter(source)
     {
 
