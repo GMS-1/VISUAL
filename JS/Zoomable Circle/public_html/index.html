@@ -13,7 +13,7 @@
                                                         
                                                         
                                                         
-                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script>
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script> 
 
                                                     
                                            <!--         <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script> <!-- **************************dans celui de base....utile?  -->
@@ -37,6 +37,9 @@
 div{
  float: left;
 } 
+.red{
+    opacity: 0.5;
+}
 
 .TableTitle1{
     font-weight: bold;
@@ -100,7 +103,6 @@ div{
   opacity:0,5;
   stroke:0px;
   text-anchor: middle;
-  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0px 0 0 #fff, 0 0px 0 #fff;
 }
 
 /*css for Tree Map*/
@@ -313,9 +315,9 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             FilterMap=[];
             if(Hierarchy.length!==1)
             {
+                Carte();
                 ZC();
                 TM();
-                Carte();
             }
             else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
 
@@ -330,7 +332,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             GroupField=eval(GroupField);
 
             $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
-            }
+        }
         
         //---------------------------DataGrid-------------------------
        
@@ -385,7 +387,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             colModel: colModelList,
             loadonce:true,
             viewrecords: true,
-            rowNum: 30,
+            rowNum: 100,
             width: 780,
             height: "auto",
             pager: "#jqGridPager",
@@ -401,7 +403,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
         });  
         $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
         
-        $("#jqGrid").gridResize();
+        
         
         $("#jqGrid").jqGrid('navGrid','#jqGridPager'
             ,{edit: false, add: false, del: false, search: true, refresh: true},// options
@@ -414,12 +416,11 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
         if(Hierarchy.length!==0)
         {
         source="table"; 
+          Carte();
           ZC();
           TM();
-          Carte();
         }
         else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
-         
 
    //---------------------------------------------------------------------------
    //                                                                           
@@ -427,7 +428,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
    //                                                                          
    //---------------------------------------------------------------------------
       function Carte()
-      {
+      {        
         var width = 1000,
             height = 700;
 
@@ -445,7 +446,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
    
             var tableres=res.map(function(g){return g.key;});
             var features= map.objects.world.geometries
-                .map(function(g) {return topojson.feature(map, g)});
+                .map(function(g) {return topojson.feature(map, g);});
             
              svg2.selectAll(".state")
                 .data(features)
@@ -457,11 +458,16 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 .attr("stroke-width", "1")
                 .attr("opacity", 0.7)
                 .attr("fill", "#33a7c2")
-                .on("mouseenter", hovered)
+                .on("mouseenter", function(){ hovered();})
                 .on("mouseleave", nothovered)
-                .on("click", function(d){/*setFilter(d, "Carte");*/clicked(d);});
+                .on("mousemove", mousemove)
+                .on("mouseout", mouseout)
+                .on("click", function(d){
+                    resetFilter("all");
+                    setFilter(d, "Carte");
+                    reload();
+                    clicked(d);});
                      
-
             svg2.append("g")
                 .selectAll("circle")
                 .data(topojson.feature(map, map.objects.world).features)
@@ -471,7 +477,62 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 .attr("r", function(d){ return sizeBubble(d.properties.name);})
                 .attr("fill", "#308cb4")
                 .attr("stroke", "#bbb")
-                .attr("opacity", 0.8);
+                .attr("opacity", 0.8);  
+        
+   //     var circle = svg.selectAll("circle")
+     //   .on("click", function(d) {transition(d); });
+        $(document).on('click', 'rect', function(){
+                    
+                    if(event.path[0].__data__!==undefined)
+                    {
+                        resetFilter("all");
+                        if(event.path[0].__data__.parent.name!=="undefined")
+                        {
+                            setFilter(event.path[0].__data__.parent, "TM");
+                            reload();
+                            lastClick=event.path[0].__data__.parent.parent;
+                            clicked(event.path[0].__data__.parent.parent);
+                        }
+                    }
+                    else{
+                        var retour=event.path[1].__data__._children;
+                        for(j=1;j<Filter.length; j++)
+                        {
+                            for(k=0; k<retour.length;k++)
+                            {
+                                console.log(retour[k].name);
+                                console.log(Filter[j].name);
+                                if(retour[k].name===Filter[j].name)
+                                {
+                                    retour=retour[k];
+                                }
+                            }
+                        }
+                        console.log(retour);
+                        resetFilter("all");
+                        setFilter(retour, "TM");
+                        reload();
+                        
+                        
+                        clicked(retour.parent);}
+                });
+                
+    $(document).on('click', 'circle', function(){
+                    resetFilter("all");
+                    console.log(event.path[0].__data__.name);
+                    if(event.path[0].__data__.name!=="undefined")
+                    {setFilter(event.path[0].__data__, "TM");
+                    lastClick=event.path[0].__data__;
+                    reload();
+                    clicked(event.path[0].__data__);}
+                    else{console.log("ici");
+                    resetFilter("all");
+                    reload();
+                    clicked(event.path[0].__data__);
+                    clicked(event.path[0].__data__);
+                }
+                });
+                
                 
             
             function hovered()
@@ -511,52 +572,81 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 return 0;
             }
    
-   
-   
-   
-   var centered;
-    function clicked(d) {
+        var centered;
+        var zoom="",zoomstate, zoombubble;
+        function clicked(d) {
+            if(d===1){centered==="";}
+            var x, y, k, opa, p_evt ;
+            if (d && centered !== d) {
+               if (centered!==undefined && centered !== null) {d3.select("."+centered.id).attr("class", "state "+ centered.id);}
+              var centroid = path.centroid(d);
+              x = centroid[0];
+              y = centroid[1];
+              opa=0;
+              k=2;
+              p_evt="none";
+              centered = d;
+              d3.select("."+d.id).attr("class", "state "+ d.id +" red");
+              zoomstate = Zoom("state");
+              zoombubble= Zoom("bubble");              
+            } 
+            else {
+              x = width / 2;
+              y = height / 2;
+              opa=1;
+              k=1;
+              p_evt="all";
+              d3.select("."+centered.id).attr("class", "state "+ centered.id);
+              centered = null;
+            }    
 
-        var x, y, k, opa, p_evt;
-        if (d && centered !== d) {
-          var centroid = path.centroid(d);
-          x = centroid[0];
-          y = centroid[1];
-          opa=0;
-          k=2;
-          p_evt="none";
-          centered = d;
-        } 
-        else {
-          x = width / 2;
-          y = height / 2;
-          opa=1;
-          k=1;
-          p_evt="all";
-          centered = null;
-        }    
 
-        name="."+d.id;
-        svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
-        
-        svg2.selectAll(".state" + name ).transition()
-            .duration(750)
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-            .attr("opacity", 1)
-            .attr("pointer-events", "all")
-            .style("stroke-width", 1.5 / k + "px");
+            function Zoom(element)
+            {
+                zoom="";
+                var rowData = $("#jqGrid").jqGrid("getRowData");
+                for(var i=0; i<rowData.length; i++)
+                {
+                    zoom = zoom + "." + element + "." + findID(rowData[i][NonHierarchy[NonHierarchy.length-2]]) + " ,";
+                }
+                zoom = zoom.substring(0, zoom.length-2);
+
+                function findID(name)
+                {
+                    for (var i=0; i<map.objects.world.geometries.length; i++)
+                    {
+                        if (map.objects.world.geometries[i].properties.name===name)
+                        {
+                            return map.objects.world.geometries[i].id;
+                        }
+                    }
+                    return "undefined";
+                }
+                return zoom;
+            }
             
+            var name="." + d.id;
+            
+            svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
+
+            svg2.selectAll(zoomstate).transition()
+                .duration(750)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+                .attr("opacity", 1)
+                .attr("pointer-events", "all")
+                .style("stroke-width", 1 + "px");
+
             if(opa===0)
             {
-                svg2.selectAll(".bubble"+name).transition()
-            .duration(750)
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" +centroid[0] +","+ centroid[1]+")");//310 et 380 doivent correspondre a la pos init
+                svg2.selectAll(zoombubble).transition()
+                    .duration(750)
+                    .attr("transform", function(d) {return "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" + path.centroid(d) + ")";}); //310 et 380 doivent correspondre a la pos init
             }
             else{
-                svg2.selectAll(".bubble"+name).transition()
+                svg2.selectAll(zoombubble).transition()
                     .duration(750)
                     .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});
-                
+
             }
         }
     }
@@ -569,8 +659,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
 
    function TM()
    {
-       
-       
      var margin = {top: 20, right: 0, bottom: 0, left: 0},
     width = 700,
     height = 700 - margin.top - margin.bottom,
@@ -676,7 +764,7 @@ grandparent.append("text")
     g.filter(function(d) {
         return d._children;}) 
         .classed("children", true)
-        .on("click", transition);
+        .on("click", function(d) {return transition(d);});
 
     g.append("rect")
         .attr("class", "parent")
@@ -700,12 +788,25 @@ grandparent.append("text")
         
     var circle = svg.selectAll("circle")
         .on("click", function(d) {transition(d); });
+
+    var carte = d3.select("#carte")
+        .on("click", function() {d=searchin(rootZC.children, event.path[0].__data__.properties.name);transition(1);});
       
     function transition(d) {
       if(d!==0){
-        if (d._children===undefined && d.children===undefined)
+        if(d===1){}
+        else if (d._children===undefined && d.children===undefined)
             {setFilter(d.parent, "TM");}
+        
         else{setFilter(d, "TM");}
+      }
+      if(Filter.length===0)
+      {
+        var object=new Object;
+        object.name="undefined";
+        object.depth=1;
+        Filter=[];
+        Filter.push(object);
       }
       d=zoomHereT();
       if (transitioning || !d) return;
@@ -724,9 +825,6 @@ grandparent.append("text")
 
       // Draw child nodes on top of parent nodes.
       svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
-
-      // Fade-in entering text.
-     // g2.selectAll("text").style("fill-opacity", 0);
      
       // Transition to the new view.
       t1.selectAll("rect").call(rect);
@@ -738,7 +836,7 @@ grandparent.append("text")
         transitioning = false;
       });
     }
- 
+
     return g;
   } 
 
@@ -757,6 +855,7 @@ grandparent.append("text")
         ? name(d.parent) + "." + d.name
         : d.name;}
 };
+
 if(source!=="table"){reload();}
    }
    
@@ -825,8 +924,7 @@ if(source!=="table"){reload();}
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-      .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-      .on("click", function(d) {setFilter(d, "ZC"); if (focus !== d) zoom(d), d3.event.stopPropagation(); });           
+      .style("fill", function(d) { return d.children ? color(d.depth) : null; });           
     
       var text = svg.selectAll("text")
       .data(nodes)
@@ -842,12 +940,15 @@ if(source!=="table"){reload();}
     circle.on("mousemove", mousemove)
         .on("mouseout", mouseout);
 
-  d3.select("body").selectAll("g, #chart")
-      .style("background", "whitesmoke")
-      .on("click", function() {
-          resetFilter("ZC");
-          here=zoomHere(); zoom(here); });
-      
+    d3.select("body").selectAll("g, #chart")
+        .on("click", function() {
+            resetFilter("ZC");
+            here=zoomHere(); zoom(here); }); 
+        
+    d3.select("body").select("#carte").selectAll(".state").on("mousemove", function() {
+            resetFilter("ZC");
+            here=zoomHere(); zoom(here); }); 
+     
   zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
   function zoom(d) {
@@ -883,7 +984,6 @@ var transition = d3.transition()
    //--------------------------------------------------------------------------- 
    
        var mousemove = function(d) {
-
         d3.select("#tooltip")
             .style("position", "absolute")
             .style("width", "auto")
@@ -892,9 +992,9 @@ var transition = d3.transition()
             .style("left", event.pageX+15 + "px")
             .style("top", event.pageY-60 + "px");
         d3.select("#tooltip #name")
-          .text(function(){if(d.name!=="undefined") {return d.name;} else {return "global";}});
+          .text(function(){if(d.name!=="undefined") {return d.name || d.properties.name;} else {return "global";}});
         d3.select("#tooltip #value")
-          .text(d.value.toLocaleString());
+          .text(function(){if(d.value!==undefined){return d.value.toLocaleString();} else{return d.id;}});
         d3.select("#tooltip").classed("hidden", false);
     };
 
@@ -926,6 +1026,7 @@ var transition = d3.transition()
                             if(retour.children[j].name===Filter[i].name)
                             {
                                 retour = retour.children[j];
+                                if(retour.children===undefined){return retour.parent;}
                             }
                         }
                     }
@@ -953,6 +1054,7 @@ var transition = d3.transition()
                             if(retour._children[j].name===Filter[i].name)
                             {
                                 retour = retour._children[j];
+                                if(retour._children===undefined){return retour.parent;}
                             }
                         }
                     }
@@ -964,6 +1066,8 @@ var transition = d3.transition()
     
     var FilterMap= [];
     var FilterCircle=[];
+    var FilterCarte=[];
+    var clickedCountry;
     function setFilter(data, source)
     {
        Filter=[];
@@ -995,26 +1099,60 @@ var transition = d3.transition()
                 FilterMap[i].depth=i+1;
             }
         }
-        console.log(rootZC);
         if (source==="Carte")
         {
-            console.log(data.properties.name);
-            var tab=rootZC;
-            searchin(tab, data.properties.name);
             
+            var tab=rootZC;
+            var nameSearch;
+            FilterCarte=[];
+            for(var k=0; k<res.length; k++)
+            {
+                if(res[k].nom===data.properties.name){ //Hardcodé!!
+                    if(NonHierarchy.length>1)
+                    {
+                        nameSearch=res[k][NonHierarchy[NonHierarchy.length-2]];
+                    }
+                    else
+                    {
+                        nameSearch=res[k][Hierarchy[Hierarchy.length-1]];
+                    }
+                }
+            }
+            if(clickedCountry===nameSearch){clickedCountry="";}
+            else
+            {
+                clickedCountry=nameSearch;
+                data=searchin(tab.children, nameSearch);
+                FilterCarte=[];
+                while(data.name!=="flare")
+                {
+                    var object= new Object;
+                    object.name=data.name;
+                    object.depth=data.depth;
+                    FilterCarte.unshift(object);
+                    data=data.parent;
+                }
+            }
         }
+        
         if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
         if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
+        if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
     }
     
     function searchin(tab, name)
     {
-        console.log(tab);
-        for(i=0; i<tab.children.length; i++)
-        {console.log(tab[i]);
-            if(tab.children[i]!==undefined){console.log(tab.children[i]); searchin(tab.children[i], name);}
-            else if (tab[i]===name){return tab[i];}
+        var obj=0;
+        for(var i=0; i<tab.length; i++)
+        {
+            if(tab[i].children!==undefined)
+            {
+                obj = searchin(tab[i].children, name);
+                if (obj!==0){return obj;}
+            }
+            else if (tab[i].name===name){return tab[i];}
         }
+        return 0;
     }
     
     function resetFilter(source)
@@ -1026,8 +1164,9 @@ var transition = d3.transition()
         {
             FilterCircle=[];
             FilterMap=[];
+            FilterCarte=[];
         }
-        setFilter();    
+        setFilter();
         reload();
     }
     
@@ -1052,8 +1191,7 @@ var transition = d3.transition()
         });
         $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');   
     }
-       
-    }
+}
 
 </script>
 
