@@ -87,10 +87,6 @@ div{
   stroke-width: 1,5px;
 }
 
-.node--leaf {
-  fill: white;
-}
-
 .label,
 .node--root{
   pointer-events: none;
@@ -119,6 +115,7 @@ text {
 }
 
 .grandparent text {
+  fill:#fff;
   font-weight: bold;
 }
 
@@ -133,11 +130,13 @@ rect.parent,
 }
 
 .grandparent rect {
-  fill: orange;
+  fill: #3170b0;
+  opacity:0.7;
 }
 
 .grandparent:hover rect {
-  fill: #ee9700;
+  fill: #3170b0;
+  opacity:1;  
 }
 
 .children rect.parent,
@@ -193,9 +192,9 @@ var margin = 20,
     diameter = 700;
 
 var color = d3.scale.linear()
-    .domain([-1, 5])
-    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
-    .interpolate(d3.interpolateHcl);
+        .domain([-1, 5])
+        .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+        .interpolate(d3.interpolateHcl);
 
 var pack = d3.layout.pack()
     .padding(2)
@@ -208,7 +207,8 @@ var svg = d3.select("body").append("svg")
     .attr("height", diameter)
   .append("g")
     .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
-    var Filter=[];  
+    var Filter=[]; 
+    var Exclus=[];
     var rootZC, rootTM;
     
     
@@ -399,10 +399,18 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 groupText:['<div class=\"TableTitle1\">{0}</div>', '<div class=\"TableTitle2\">{0}</div>', '<div class=\"TableTitle3\">{0}</div>'],
                 groupSummaryPos: ['header', 'header', 'header'],
                 groupCollapse: false
+            },
+            loadComplete: function() {
+                var rowData = $("#jqGrid").getRowData();
+                var DataID = $("#jqGrid").getDataIDs();
+                
+                for(var j=0; j<rowData.length;j++)
+                {
+                    if(rowData[j][NonHierarchy[NonHierarchy.length-2]]===Exclus.name){rowData=DataID[j];}
+                }
+                $("#jqGrid").jqGrid('setRowData', rowData,false, {'background':'#6ac3d8'});
             }
-        });  
-        $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
-        
+        });        
         
         
         $("#jqGrid").jqGrid('navGrid','#jqGridPager'
@@ -447,7 +455,9 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             var tableres=res.map(function(g){return g.key;});
             var features= map.objects.world.geometries
                 .map(function(g) {return topojson.feature(map, g);});
-var last;          
+    
+            var last=new Object;   
+
              svg2.selectAll(".state")
                 .data(features)
                 .enter()
@@ -461,14 +471,20 @@ var last;
                 .on("mouseenter", function(){ hovered();})
                 .on("mouseleave", nothovered);
 
-                $(document).on('click', '.state', function(d){
-                    d=event.path[0].__data__;
-                    resetFilter("all");
-                    setFilter(d, "Carte");
-                    reload();
-                    if(d===last){clicked(last);}
-                    else{clicked(d);}
-                    last=d;});   
+                $(document).on('click', '.state', function(d){ //click on Map
+                    if(last.click===undefined){last.click="!--";}
+                    if(event.path[0].__data__.properties.name===last.click.name && last.graph!=="carte"){last.graph="carte";clicked(last.click);}
+                    else
+                    {
+                        last.graph="carte";
+                        d=event.path[0].__data__;
+                        resetFilter("all");
+                        setFilter(d, "Carte");
+                        reload();
+                        clicked(d);
+                        last.click=d;
+                    }
+                });   
                 
                 svg2.selectAll(".state").on("mousemove", mousemove)
                 .on("mouseout", mouseout);
@@ -484,18 +500,19 @@ var last;
                 .attr("stroke", "#bbb")
                 .attr("opacity", 0.8);
 
-        $(document).on('click', 'rect', function(){
-            
+        $(document).on('click', 'rect', function(){   //click on TM
             if(event.path[0].__data__!==undefined)
             {
+                last.graph="TM";
                 resetFilter("all");
                 if(event.path[0].__data__.parent.name!=="undefined")
                 {
                     setFilter(event.path[0].__data__.parent, "TM");
                     reload();
-                    last=event.path[0].__data__.parent;
-                    clicked(last);
+                    last.click=event.path[0].__data__.parent;
+                    clicked(last.click);
                 }
+                last.graph="TM";
             }
             else //click on TM header
             {
@@ -511,33 +528,50 @@ var last;
                     }
                 }
                 resetFilter("all");
-                
-                if(retour.name!==undefined) {last=retour; setFilter(retour, "TM");
-                reload();
-                clicked(retour);}
-                else{resetFilter("all");clicked(last);last=0;}
+                if(retour.name!==undefined) {
+                    last.graph="TM";    
+                    last.click=retour; 
+                    setFilter(retour, "TM");
+                    reload();
+                    clicked(retour);
+                    last.graph="TM";
+                }
+                else{
+                    resetFilter("all");
+                    reload();
+                    last.graph=0;
+                    clicked(last.click);
+                    last.click=0;
+                }
             }
         });
         
 
-        $(document).on('click', 'circle', function(){
-
+        $(document).on('click', 'circle', function(){ //click on ZC
             resetFilter("all");
             if(event.path[0].__data__.name!=="undefined"){
+                
+                svg.selectAll(".node--leaf").attr("fill", "white");
+                last.graph="ZC";
                 setFilter(event.path[0].__data__, "TM");
                 reload();
-                last=event.path[0].__data__;
-                clicked(last);
+                last.click=event.path[0].__data__;
+                clicked(last.click);
+                last.graph="ZC";
             }
             else{
-                resetFilter("all");
-                reload();
-                clicked(last);
-                last=0;
+                if(last.graph!==0){
+                    resetFilter("all");
+                    reload();
+                    last.graph=0;
+                    clicked(last.click);
+                    last.click=0;
+                    last.graph="ZC";
+                }
             }
         });
 
-
+//click table
 
         function hovered()
         {
@@ -577,59 +611,95 @@ var last;
         }
    
         var centered;
+        var lastgraph;
+        
         var zoom="",zoomstate, zoombubble;
-        function clicked(d) {
+        function clicked(d) {            
             if(d===1){centered==="";}
             var x, y, k, opa, p_evt ;
-            if (d && centered !== d) {
-              if(centered!==undefined && centered !== null){d3.select("."+centered.id).attr("class", "state "+ centered.id);}
-              centered = d;
-              var centroid = path.centroid(d);
-              var rowData = $("#jqGrid").jqGrid("getRowData");
-              var conv=convert(rowData[1]);
-              if(isNaN(centroid[0])){centroid=path.centroid(conv);}
-              x = centroid[0];
-              y = centroid[1];
-              opa=0;
-              k=2;
-              p_evt="none";
-              d3.select("."+d.id).attr("class", "state "+ d.id +" country");
-              zoomstate = Zoom("state");
-              zoombubble= Zoom("bubble");              
+            
+            if ((d && centered !== d) || (last.graph===lastgraph && last.graph!=="carte")) {
+
+                if(centered!==undefined && centered !== null)   {d3.select("."+centered.id).attr("class", "state "+ centered.id);}
+            
+            /*
+            function UnzoomCountry(zoombefore, zoomafter)
+            {
+                if(centered!==null && centered!==undefined)
+                {
+                    var result="";
+                    var before=zoombefore.split(",");
+                    var after=zoomafter.split(",");
+                    for(var i=0; i<before.length; i++)
+                    {
+                        for(var j=0; j<after.length; j++)
+                        {
+                            if(before[i]===after[j])
+                            {j=after.length+1;}
+                        }
+                        if(before[i]!==".state.undefined "){
+                        result=result+before[i] +",";}
+                    }
+                    result = result.substring(0, result.length-2);
+                }
+                return result;
+            }
+                        
+            var clearzoom=UnzoomCountry(zoomstate, Zoom("state"));  */
+            
+            svg2.selectAll(zoomstate)
+                .attr("transform", "translate(0,0)scale(1)")
+                .attr("opacity", 0)
+                .attr("pointer-events", "all")
+                .style("stroke-width", 1 + "px");
+                
+                centered = d;
+                lastgraph=last.graph;
+                var centroid = path.centroid(d);
+                var rowData = $("#jqGrid").jqGrid("getRowData");
+                var conv=convert(rowData[0]);
+                if(isNaN(centroid[0])){centroid=path.centroid(conv);}
+                x = centroid[0];
+                y = centroid[1];
+                opa=0;
+                k=2;
+                p_evt="none";
+                d3.select("."+d.id).attr("class", "state "+ d.id +" country");
+                zoomstate = Zoom("state");
+                zoombubble= Zoom("bubble");
             } 
             else {
-              x = width / 2;
-              y = height / 2;
-              opa=1;
-              k=1;
-              p_evt="all";
-              d3.select("."+centered.id).attr("class", "state "+ centered.id);
-              centered = null;
+                resetFilter("all");
+                x = width / 2;
+                y = height / 2;
+                opa=1;
+                k=1;
+                last.graph=0;
+                p_evt="all";
+                d3.select("."+centered.id).attr("class", "state "+ centered.id);
+                centered = null; 
             }
             
             function convert(data)
             {
-                
                 for(i=0; i<features.length; i++)
                 {
-                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];}
+                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];} //bug ici
                 }
             }
 
-            function Zoom(element)
+            function Zoom(element) //select all the countries that will be zoomed (depending on the hierarchy)
             {
-                
-                
                 zoom="";
-                var rowData = $("#jqGrid").jqGrid("getRowData");
+                var rowData = $("#jqGrid").jqGrid("getRowData"); //take all the element of the grid
                 
                 for(var i=0; i<rowData.length; i++)
                 {
-                    zoom = zoom + "." + element + "." + findID(rowData[i][NonHierarchy[NonHierarchy.length-2]]) + " ,";
+                    zoom = zoom + "." + element + "." + findID(rowData[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; //add their ID to the list
                 }
                 zoom = zoom.substring(0, zoom.length-2);
 
-                function findID(name)
+                function findID(name) //link the name of the cuntry to its ID
                 {
                     for (var i=0; i<map.objects.world.geometries.length; i++)
                     {
@@ -644,14 +714,14 @@ var last;
             }
             
             svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
-            
+
             svg2.selectAll(zoomstate).transition()
                 .duration(750)
                 .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
                 .attr("opacity", 1)
                 .attr("pointer-events", "all")
                 .style("stroke-width", 1 + "px");
-            
+
             if(opa===0)
             {                  
                 svg2.selectAll(zoombubble).transition()
@@ -663,7 +733,6 @@ var last;
                 svg2.selectAll(zoombubble).transition()
                     .duration(750)
                     .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});
-
             }
         }
     }
@@ -807,7 +876,9 @@ grandparent.append("text")
         .on("click", function(d) {transition(d); });
 
     var carte = d3.select("#carte")
-        .on("click", function() {d=searchin(rootZC.children, event.path[0].__data__.properties.name);transition(1);});
+        .on("click", function() { d=searchin(rootZC.children, event.path[0].__data__.properties.name);transition(1);});
+
+//click table
       
     function transition(d) {
       if(d!==0){
@@ -860,7 +931,16 @@ grandparent.append("text")
   function rect(rect) {
     rect.attr("x", function(d) { return x(d.x); })
         .attr("y", function(d) { return y(d.y); })
-        .attr("fill",function(d) {var a = Math.random() * 360;return "hsl(" + a + ",100%,36%)";})
+        .attr("fill",function(d) {
+            if(d._children!==undefined){
+                var a = Math.random() * 360;return "hsl(" + a + ",100%,36%)";
+            }
+            else{
+                if(d.name===Exclus.name){return "#33a7c2";}
+                else{return "#308cb4";}
+            }
+        })
+        .attr("opacity",function(d){if(d.name===Exclus.name){return 0.4;}else{return 1;} })
         .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
         .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
   }
@@ -941,8 +1021,10 @@ if(source!=="table"){reload();}
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-      .style("fill", function(d) { return d.children ? color(d.depth) : null; });           
-    
+      .style("fill", function(d) {return d.children ? color(d.depth) : null; });
+
+      svg.selectAll(".node--leaf").attr("fill", "white");
+
       var text = svg.selectAll("text")
       .data(nodes)
       .enter()  
@@ -966,6 +1048,12 @@ if(source!=="table"){reload();}
             resetFilter("all");
             setFilter(event.path[0].__data__, "Carte");
             here=zoomHere(); zoom(here); });
+        
+        //click table
+    //d3.selectAll("#navGrid").on("click", function(){console.log("coucou");});
+     console.log($("#jqGrid").jqGrid('navGrid'));
+     $("#jqGrid").on("click", function(){ 
+     });
      
   zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
@@ -1121,6 +1209,9 @@ var transition = d3.transition()
         }
         if (source==="Carte")
         {
+            svg.selectAll(".node--leaf").attr("fill", function(d){
+                {return "white";}
+            });
             
             var tab=rootZC;
             var nameSearch;
@@ -1154,12 +1245,22 @@ var transition = d3.transition()
                     data=data.parent;
                 }
             }
-            if(FilterCarte.length>Hierarchy.length){FilterCarte.pop();}
+            
         }
-        
         if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
         if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
         if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
+        
+        if(FilterCarte.length>Hierarchy.length)
+            {
+                Exclus = FilterCarte.pop();
+                svg.selectAll(".node--leaf").attr("fill", function(d){
+                    if(Exclus.name===d.name)
+                        {return "#75dccd";}
+                        else{return "white";}
+                    });
+            }
+            else{Exclus=0;}
     }
     
     function searchin(tab, name)
