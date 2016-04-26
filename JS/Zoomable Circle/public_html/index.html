@@ -207,7 +207,7 @@ var svg = d3.select("body").append("svg")
     .attr("height", diameter)
   .append("g")
     .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
-    var Filter=[]; 
+    var Filter=[];
     var Exclus=[];
     var rootZC, rootTM;
     
@@ -224,7 +224,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
    //                            Grid                                           
    //                                                                          
    //---------------------------------------------------------------------------
-
+        var SearchByClick=false;
         var csvfile=res;
         var source;
         var list =JSON.stringify(csvfile);
@@ -357,7 +357,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
         {
             if(isNaN(res[0][column[i]]))
             {
-                colModelList = colModelList + "{ name: '"+ column[i] + "'" + ", sortable: false, summaryTpl : \"<b>{0}</b>\"},";
+                colModelList = colModelList + "{ name: '"+ column[i] + "'" + ",sortable: false, summaryTpl : \"<b>{0}</b>\"},";
             }
             else
             {
@@ -403,22 +403,50 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             loadComplete: function() {
                 var rowData = $("#jqGrid").getRowData();
                 var DataID = $("#jqGrid").getDataIDs();
-                
                 for(var j=0; j<rowData.length;j++)
                 {
                     if(rowData[j][NonHierarchy[NonHierarchy.length-2]]===Exclus.name){rowData=DataID[j];}
                 }
                 $("#jqGrid").jqGrid('setRowData', rowData,false, {'background':'#6ac3d8'});
+                if(SearchByClick===true)
+                {
+                    var data = $("#jqGrid").getGridParam("postData").filters;
+                    if(data!==undefined)
+                    {
+                        data = JSON.parse(data);
+                        var adaptcharts=true;
+                        for(i=0; i<data.rules.length; i++)
+                        {
+                            for(j=1; j<NonHierarchy.length; j++)
+                            {
+                                if(data.rules[i].field===NonHierarchy[j])
+                                {
+                                    console.log(NonHierarchy[j]);
+                                    adaptcharts=false;
+                                }
+                            }
+                        }
+                        if(rowData.length===0){adaptcharts=false;}
+                        if(data.rules.length!==0 && adaptcharts===true)
+                        {
+                            setFilter(data, "grid");
+                        }
+                    }
+                    SearchByClick=false;
+                    
+                    if(adaptcharts===true){document.getElementById("change").innerHTML=$("#jqGrid").getGridParam("postData").filters;}
+                }
             }
-        });        
+        });    
         
+        $("#jqGrid").gridResize();
         
         $("#jqGrid").jqGrid('navGrid','#jqGridPager'
             ,{edit: false, add: false, del: false, search: true, refresh: true},// options
             {}, // settings for edit
             {}, // settings for add
             {}, // settings for delete
-            {onSearch:function(){}, multipleSearch:true,overlay:false, sopt: ['eq', 'le', 'ge']} // search options
+            {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq']} // search options
         ); 
         
         if(Hierarchy.length!==0)
@@ -429,7 +457,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
           TM();
         }
         else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
-
+        
+        
    //---------------------------------------------------------------------------
    //                                                                           
    //                           Carte
@@ -555,7 +584,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 last.graph="ZC";
                 setFilter(event.path[0].__data__, "TM");
                 reload();
-                last.click=event.path[0].__data__;
+                if(event.path[0].__data__.children!==undefined)
+                {
+                    last.click=event.path[0].__data__;
+                }
+                else
+                {
+                    last.click=event.path[0].__data__.parent;
+                }
                 clicked(last.click);
                 last.graph="ZC";
             }
@@ -572,6 +608,24 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
         });
 
 //click table
+    $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
+        resetFilter("all");
+        reload();
+        last.graph=0;
+        clicked(last.click);
+        last.click=0;
+        last.graph="Grid";}); 
+
+    $(document).ready(function(){
+    $('#change').bind("DOMSubtreeModified",function(){
+        document.getElementById("change").innerHTML="";
+        svg.selectAll(".node--leaf").attr("fill", "white");
+        last.graph="Grid";
+        last.click = rootZC;
+        clicked(last.click);
+        last.graph="Grid";
+    });
+});
 
         function hovered()
         {
@@ -745,7 +799,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
 
    function TM()
    {
-     var margin = {top: 20, right: 0, bottom: 0, left: 0},
+    var margin = {top: 20, right: 0, bottom: 0, left: 0},
     width = 700,
     height = 700 - margin.top - margin.bottom,
     formatNumber = d3.format(",d"),
@@ -872,13 +926,22 @@ grandparent.append("text")
      .attr("fill", "white")
      .attr("font-size", "20");
         
-    var circle = svg.selectAll("circle")
+    var circle = svg.selectAll("circle") //click on circle
         .on("click", function(d) {transition(d); });
 
-    var carte = d3.select("#carte")
-        .on("click", function() { d=searchin(rootZC.children, event.path[0].__data__.properties.name);transition(1);});
+    var carte = d3.select("#carte") //click on map
+        .on("click", function() { transition(1);});
+
+    $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
+        transition(1);}); 
 
 //click table
+    $(document).ready(function(){
+    $('#change').bind("DOMSubtreeModified",function(){
+        document.getElementById("change").innerHTML="";
+        transition(1);
+    });
+});
       
     function transition(d) {
       if(d!==0){
@@ -1012,7 +1075,6 @@ if(source!=="table"){reload();}
     rootZC = wrfile();
   if (error) throw error;
 
-
   var focus = rootZC,
       nodes = pack.nodes(rootZC),
       view;
@@ -1039,28 +1101,43 @@ if(source!=="table"){reload();}
     circle.on("mousemove", mousemove)
         .on("mouseout", mouseout);
 
-    d3.select("body").selectAll("g, #chart")
+    d3.select("body").selectAll("g, #chart") //click on ZC and TM
         .on("click", function() {
             resetFilter("ZC");
-            here=zoomHere(); zoom(here); }); 
+            here=zoomHere();zoom(here); }); 
         
-    d3.selectAll(".state").on("click", function() {
+    d3.selectAll(".state").on("click", function() {  //click on map
             resetFilter("all");
             setFilter(event.path[0].__data__, "Carte");
             here=zoomHere(); zoom(here); });
         
+        
         //click table
-    //d3.selectAll("#navGrid").on("click", function(){console.log("coucou");});
-     console.log($("#jqGrid").jqGrid('navGrid'));
-     $("#jqGrid").on("click", function(){ 
-     });
-     
+    $("#refresh_jqGrid").on("click", function(){ //refresh button of jqGrid
+        resetFilter("all");
+        
+        var object=new Object;
+        object.name="undefined";
+        object.depth=1;
+        Filter=[];
+        Filter.push(object);
+        
+        here=zoomHere();zoom(here);
+    }); 
+    
+    $('#change').bind("DOMSubtreeModified",function(){
+        document.getElementById("change").innerHTML="";
+        here=zoomHere(); zoom(here);
+    });
+    
+
+
   zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
 
   function zoom(d) {
     var focus0 = focus; focus = d;
 var transition = d3.transition()
-        .duration( d3.event.altKey ? 7500 : 750)
+        .duration(750)
         .tween("zoom", function(d) {
             var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
             return function(t) { zoomTo(i(t)); };
@@ -1173,6 +1250,7 @@ var transition = d3.transition()
     var FilterMap= [];
     var FilterCircle=[];
     var FilterCarte=[];
+    var FilterGrid=[];
     var clickedCountry;
     function setFilter(data, source)
     {
@@ -1181,6 +1259,7 @@ var transition = d3.transition()
        {    
             FilterCircle=[];
             FilterCarte=[];
+            FilterGrid=[];
             while(data.name!=="flare")
             {
                 var object= new Object;
@@ -1195,6 +1274,7 @@ var transition = d3.transition()
             if(FilterCircle===undefined){FilterCircle=[];}
             FilterMap=[];
             FilterCarte=[];
+            FilterGrid=[];
             while(data.name!=="flare")
             {
                 var object= new Object;
@@ -1216,6 +1296,7 @@ var transition = d3.transition()
             var tab=rootZC;
             var nameSearch;
             FilterCarte=[];
+            FilterGrid=[];
             for(var k=0; k<res.length; k++)
             {
                 if(res[k].nom===data.properties.name){ //Hardcodé!!
@@ -1247,20 +1328,96 @@ var transition = d3.transition()
             }
             
         }
-        if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
-        if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
-        if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
-        
-        if(FilterCarte.length>Hierarchy.length)
+        if(source==="grid")
+        {
+            FilterGrid=[];
+            FilterMap=[];
+            FilterCarte=[];
+            FilterCircle=[];
+            
+            var object = new Object;
+            for (i=0; i<data.rules.length; i++)
             {
-                Exclus = FilterCarte.pop();
-                svg.selectAll(".node--leaf").attr("fill", function(d){
-                    if(Exclus.name===d.name)
-                        {return "#75dccd";}
-                        else{return "white";}
-                    });
+                for(j=0; j<Hierarchy.length; j++)
+                {
+                    if(Hierarchy[j]===data.rules[i].field)
+                    {object.depth=j;}
+                }
+                if(data.rules[i].field===NonHierarchy[NonHierarchy.length-2]){object.depth=Hierarchy.length;}
+                object.name=data.rules[i].data;
+                FilterGrid.push(object);
             }
-            else{Exclus=0;}
+            for(i=0; i<FilterGrid.length; i++)
+            {
+                var maxdepth=0;
+                var maxname="";
+                if(FilterGrid[i].depth>maxdepth)
+                {
+                    maxdepth=FilterGrid[i].depth;
+                    maxname=FilterGrid[i].name;
+                }
+            }
+            var NonDepth=[];
+            if(maxdepth>FilterGrid.length)
+            {
+                for(j=maxdepth; j>0; j--)
+                {
+                    for(i=0; i<FilterGrid.length; i++)
+                    {
+                        if(j===FilterGrid[i].depth){i=FilterGrid.length+1;}
+                        else {NonDepth.push(j);}
+                    }
+                }
+            }   
+            var part;
+            if(maxdepth>=Hierarchy.length)
+            {part=NonHierarchy[NonHierarchy.length-2];}
+            else{part=Hierarchy[maxdepth];}
+
+            var save;
+            for(i=0; i<res.length; i++)
+            {
+                if(res[i][part].toLowerCase()===maxname.toLowerCase())
+                {
+                    save=res[i];
+                }
+            }
+            for (i=0; i<NonDepth.length; i++)
+            {
+                var obj=new Object();
+                obj.name=save[Hierarchy[NonDepth[i]]];
+                obj.depth=NonDepth[i];
+                FilterGrid.unshift(obj); 
+            }
+            for(i=0; i<FilterGrid.length; i++)
+            {
+                FilterGrid[i].depth=FilterGrid[i].depth+1;
+            }
+            var object=new Object;
+            object.name="undefined";
+            object.depth=1;
+            FilterGrid.push(object);
+        }
+    if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
+    if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
+    if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
+    if(FilterGrid.length!==0) {for (i=0; i<FilterGrid.length;i++){Filter.push(FilterGrid[i]);}}
+
+    if(FilterCarte.length>Hierarchy.length)
+        {
+            Exclus = FilterCarte.pop();
+            svg.selectAll(".node--leaf").attr("fill", function(d){
+                if(Exclus.name===d.name)
+                    {return "#75dccd";}
+                    else{return "white";}
+                });
+        }
+    else if(FilterGrid.length>Hierarchy.length)
+        {
+            //Exclus
+        }
+    else{Exclus=0;}
+    console.log(Exclus);
     }
     
     function searchin(tab, name)
@@ -1288,6 +1445,7 @@ var transition = d3.transition()
             FilterCircle=[];
             FilterMap=[];
             FilterCarte=[];
+            FilterGrid=[];
         }
         setFilter();
         reload();
@@ -1316,6 +1474,8 @@ var transition = d3.transition()
     }
 }
 
+
+
 </script>
 
     <table id="jqGrid">
@@ -1325,5 +1485,7 @@ var transition = d3.transition()
         <strong id="name"></strong><br/>
     <span id="value"></span>
     </div>
+
+<div style="display:none" id="change"></div>
     
 </body>
