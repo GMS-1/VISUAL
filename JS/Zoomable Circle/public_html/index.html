@@ -421,7 +421,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                             {
                                 if(data.rules[i].field===NonHierarchy[j])
                                 {
-                                    console.log(NonHierarchy[j]);
                                     adaptcharts=false;
                                 }
                             }
@@ -481,42 +480,42 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             .attr("width", width)
             .attr("height", height);
    
-            var tableres=res.map(function(g){return g.key;});
+            var tableres=res.map(function(g){return g.nom;}); //Hard codé
             var features= map.objects.world.geometries
                 .map(function(g) {return topojson.feature(map, g);});
     
             var last=new Object;   
 
-             svg2.selectAll(".state")
-                .data(features)
-                .enter()
-                .append("path")
-                .attr("class",function(d) {return "state " + d.id;})
-                .attr("d", path)
-                .attr("stroke", "#fff")
-                .attr("stroke-width", "1")
-                .attr("opacity", 0.7)
-                .attr("fill", "#33a7c2")
-                .on("mouseenter", function(){ hovered();})
-                .on("mouseleave", nothovered);
+            svg2.selectAll(".state")
+               .data(features)
+               .enter()
+               .append("path")
+               .attr("class",function(d) {return "state " + d.id;})
+               .attr("d", path)
+               .attr("stroke", "#fff")
+               .attr("stroke-width", "1")
+               .attr("opacity", 0.7)
+               .attr("fill", "#33a7c2")
+               .on("mouseenter", function(){ hovered();})
+               .on("mouseleave", nothovered);
 
-                $(document).on('click', '.state', function(d){ //click on Map
-                    if(last.click===undefined){last.click="!--";}
-                    if(event.path[0].__data__.properties.name===last.click.name && last.graph!=="carte"){last.graph="carte";clicked(last.click);}
-                    else
-                    {
-                        last.graph="carte";
-                        d=event.path[0].__data__;
-                        resetFilter("all");
-                        setFilter(d, "Carte");
-                        reload();
-                        clicked(d);
-                        last.click=d;
-                    }
-                });   
+            $(document).on('click', '.state', function(d){ //click on Map
+                if(last.click===undefined){last.click="!--";}
+                if(event.path[0].__data__.properties.name===last.click.name && last.graph!=="carte"){last.graph="carte";clicked(last.click);}
+                else
+                {
+                    last.graph="carte";
+                    d=event.path[0].__data__;
+                    resetFilter("all");
+                    setFilter(d, "Carte");
+                    reload();
+                    clicked(d);
+                    last.click=d;
+                }
+            });   
                 
-                svg2.selectAll(".state").on("mousemove", mousemove)
-                .on("mouseout", mouseout);
+            svg2.selectAll(".state").on("mousemove", mousemove)
+            .on("mouseout", mouseout);
                      
             svg2.append("g")
                 .selectAll("circle")
@@ -616,10 +615,19 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
         last.click=0;
         last.graph="Grid";}); 
 
-    $(document).ready(function(){
+    $(document).ready(function(){ //Search by grid Filter
     $('#change').bind("DOMSubtreeModified",function(){
+        
         document.getElementById("change").innerHTML="";
-        svg.selectAll(".node--leaf").attr("fill", "white");
+        svg.selectAll(".node--leaf").attr("fill", function(d){
+            if(Exclus!==0 && Exclus!==undefined)
+            {
+                if(Exclus.name.toLowerCase()===d.name.toLowerCase())
+                    {return "#75dccd";}
+                else{return "white";}
+            }
+            else{return "white";}
+            });
         last.graph="Grid";
         last.click = rootZC;
         clicked(last.click);
@@ -706,7 +714,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 .attr("opacity", 0)
                 .attr("pointer-events", "all")
                 .style("stroke-width", 1 + "px");
-                
+            
                 centered = d;
                 lastgraph=last.graph;
                 var centroid = path.centroid(d);
@@ -780,6 +788,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             {                  
                 svg2.selectAll(zoombubble).transition()
                     .duration(750)
+                    .attr("opacity", 1)
                     .attr("transform", function(d) {return "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" + path.centroid(d) + ")";}); //310 et 380 doivent correspondre a la pos init
             }
             else
@@ -797,7 +806,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
    //                                                                          
    //--------------------------------------------------------------------------- 
 
-   function TM()
+   function TM()//draw TreeMap and parameter interactions with oter element of the dashboard
    {
     var margin = {top: 20, right: 0, bottom: 0, left: 0},
     width = 700,
@@ -937,7 +946,7 @@ grandparent.append("text")
 
 //click table
     $(document).ready(function(){
-    $('#change').bind("DOMSubtreeModified",function(){
+    $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
         document.getElementById("change").innerHTML="";
         transition(1);
     });
@@ -999,11 +1008,10 @@ grandparent.append("text")
                 var a = Math.random() * 360;return "hsl(" + a + ",100%,36%)";
             }
             else{
-                if(d.name===Exclus.name){return "#33a7c2";}
-                else{return "#308cb4";}
+                if(Exclus!==0 && Exclus!==undefined){if(d.name.toLowerCase()===Exclus.name.toLowerCase()){return "#33a7c2";}
+                else{return "#308cb4";}}else{return "#308cb4";}
             }
         })
-        .attr("opacity",function(d){if(d.name===Exclus.name){return 0.4;}else{return 1;} })
         .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
         .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
   }
@@ -1070,7 +1078,7 @@ if(source!=="table"){reload();}
     return root;
    }
    
-    function ZC()
+    function ZC()   //draw Zoomable Circle and parameter interactions with oter element of the dashboard
    {
     rootZC = wrfile();
   if (error) throw error;
@@ -1125,7 +1133,7 @@ if(source!=="table"){reload();}
         here=zoomHere();zoom(here);
     }); 
     
-    $('#change').bind("DOMSubtreeModified",function(){
+    $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
         document.getElementById("change").innerHTML="";
         here=zoomHere(); zoom(here);
     });
@@ -1406,18 +1414,24 @@ var transition = d3.transition()
     if(FilterCarte.length>Hierarchy.length)
         {
             Exclus = FilterCarte.pop();
-            svg.selectAll(".node--leaf").attr("fill", function(d){
-                if(Exclus.name===d.name)
-                    {return "#75dccd";}
-                    else{return "white";}
-                });
         }
     else if(FilterGrid.length>Hierarchy.length)
         {
-            //Exclus
+            for(var i=0;i<FilterGrid.length; i++)
+            {
+                if(FilterGrid[i].depth===FilterGrid.length)
+                {
+                    Exclus = FilterGrid.splice(i, 1);
+                    Exclus=Exclus[0];
+                }
+            }
         }
     else{Exclus=0;}
-    console.log(Exclus);
+    svg.selectAll(".node--leaf").attr("fill", function(d){
+        if(Exclus.name===d.name)
+            {return "#75dccd";}
+            else{return "white";}
+        });
     }
     
     function searchin(tab, name)
