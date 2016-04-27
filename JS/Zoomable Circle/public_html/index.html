@@ -87,6 +87,11 @@ div{
   stroke-width: 1,5px;
 }
 
+.node{
+  stroke: #bbb;
+  stroke-width: 0,5px;
+}
+
 .label,
 .node--root{
   pointer-events: none;
@@ -211,13 +216,14 @@ var svg = d3.select("body").append("svg")
     var Exclus=[];
     var rootZC, rootTM;
     
-    
+d3.csv("wdr2014.csv", function(error, dcol) {
 d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {    
-d3.json("dataTM.json", function(error, res) { main(error, res, map);}); 
+d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); 
 //d3.csv("age.csv", function(error, res){ main(error, res);});
 });
+});
 
-    function main (error, res, map){
+    function main (error, res, map, dcol){
         
    //---------------------------------------------------------------------------
    //                                                                           
@@ -481,6 +487,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
             .attr("height", height);
    
             var tableres=res.map(function(g){return g.nom;}); //Hard codé
+            
             var features= map.objects.world.geometries
                 .map(function(g) {return topojson.feature(map, g);});
     
@@ -719,7 +726,12 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map);});
                 lastgraph=last.graph;
                 var centroid = path.centroid(d);
                 var rowData = $("#jqGrid").jqGrid("getRowData");
-                var conv=convert(rowData[0]);
+                var cpt=0;
+                while (conv===undefined)
+                {
+                    var conv=convert(rowData[cpt]);
+                    cpt++;
+                }
                 if(isNaN(centroid[0])){centroid=path.centroid(conv);}
                 x = centroid[0];
                 y = centroid[1];
@@ -1091,7 +1103,59 @@ if(source!=="table"){reload();}
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-      .style("fill", function(d) {return d.children ? color(d.depth) : null; });
+      .style("fill", function (d) {
+        var colorBubble=d.children ? color(d.depth): null;
+        if(d.children)
+        {
+            a= sommeChildren(d);
+            console.log(d.name);
+            a=a/d[NonHierarchy[NonHierarchy.length-1]];
+            console.log(a.toLocaleString());
+            a=250+30*(a+5);
+            colorBubble ="hsl(" + a + ",100%,50%)";
+        }        
+        for(i=0; i<dcol.length;i++)
+        {
+            if (dcol[i].nom===d.name)
+            {
+                console.log(d.name);
+                console.log(dcol[i].delta);
+                var a=250+30*(dcol[i].delta+5);
+                colorBubble ="hsl(" + a + ",100%,50%)";
+            }
+        } 
+        return colorBubble;
+    });
+    
+    function sommeChildren(d)
+    {
+        var deltaChildren=0, nbinhab=0;
+        for(var i=0; i<d.children.length; i++)
+        {
+            if(d.children[i].children)
+            {
+              deltaChildren = sommeChildren(d.children[i]) + deltaChildren;
+            }
+            else 
+            {
+                var perct;
+                var pop;
+                for(var j=0; j<dcol.length;j++)
+                {
+                    if (dcol[j].nom===d.children[i].name)
+                    {
+                        perct=dcol[j].delta; //delta: hard codé
+                        pop=d.children[i][NonHierarchy[NonHierarchy.length-1]]; //pop: hard codé
+                        perct=parseFloat(perct);
+                        pop=parseFloat(pop);
+                        if(!isNaN(perct)) {deltaChildren = deltaChildren + perct*pop;}
+                    }
+                }
+            }
+        }
+    if(nbinhab!==0){return deltaChildren;}
+    else{return deltaChildren;}
+    }
 
       svg.selectAll(".node--leaf").attr("fill", "white");
 
