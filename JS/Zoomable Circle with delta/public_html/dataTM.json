@@ -1,0 +1,1502 @@
+[
+  {
+    "nom": "Afghanistan",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 25500100
+  },
+  {
+    "nom": "�land Islands",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 28502
+  },
+  {
+    "nom": "Albania",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 2821977
+  },
+  {
+    "nom": "Algeria",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 37900000
+  },
+  {
+    "nom": "American Samoa",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 55519
+  },
+  {
+    "nom": "Andorra",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 76246
+  },
+  {
+    "nom": "Angola",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 20609294
+  },
+  {
+    "nom": "Anguilla",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 13452
+  },
+  {
+    "nom": "Antarctica",
+    "region": "",
+    "subregion": "",
+    "value": 2
+  },
+  {
+    "nom": "Antigua and Barbuda",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 86295
+  },
+  {
+    "nom": "Argentina",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 40117096
+  },
+  {
+    "nom": "Armenia",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 3024100
+  },
+  {
+    "nom": "Aruba",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 101484
+  },
+  {
+    "nom": "Australia",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "value": 23254142
+  },
+  {
+    "nom": "Austria",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 8501502
+  },
+  {
+    "nom": "Azerbaijan",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 9235100
+  },
+  {
+    "nom": "The Bahamas",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 2
+  },
+  {
+    "nom": "Bahrain",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 1234571
+  },
+  {
+    "nom": "Bangladesh",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 152518015
+  },
+  {
+    "nom": "Barbados",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 274200
+  },
+  {
+    "nom": "Belarus",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 9465500
+  },
+  {
+    "nom": "Belgium",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 11175653
+  },
+  {
+    "nom": "Belize",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 312971
+  },
+  {
+    "nom": "Benin",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 10323000
+  },
+  {
+    "nom": "Bermuda",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 64237
+  },
+  {
+    "nom": "Bhutan",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 740990
+  },
+  {
+    "nom": "Bolivia",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 10027254
+  },
+  {
+    "nom": "Bonaire",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 2
+  },
+  {
+    "nom": "Bosnia and Herzegovina",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 3791622
+  },
+  {
+    "nom": "Botswana",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "value": 2024904
+  },
+  {
+    "nom": "Bouvet Island",
+    "region": "",
+    "subregion": "",
+    "value": 2
+  },
+  {
+    "nom": "Brazil",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 201032714
+  },
+  {
+    "nom": "British Indian Ocean Territory",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 2
+  },
+  {
+    "nom": "British Virgin Islands",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 29537
+  },
+  {
+    "nom": "Brunei",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 393162
+  },
+  {
+    "nom": "Bulgaria",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 7282041
+  },
+  {
+    "nom": "Burkina Faso",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 17322796
+  },
+  {
+    "nom": "Burundi",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 10163000
+  },
+  {
+    "nom": "Cambodia",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 15135000
+  },
+  {
+    "nom": "Cameroon",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 20386799
+  },
+  {
+    "nom": "Canada",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 35158304
+  },
+  {
+    "nom": "Cape Verde",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 491875
+  },
+  {
+    "nom": "Cayman Islands",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 55456
+  },
+  {
+    "nom": "Central African Republic",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 4616000
+  },
+  {
+    "nom": "Chad",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 12825000
+  },
+  {
+    "nom": "Chile",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 16634603
+  },
+  {
+    "nom": "China",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 1361170000
+  },
+  {
+    "nom": "Christmas Island",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "value": 2072
+  },
+  {
+    "nom": "Cocos (Keeling) Islands",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "value": 550
+  },
+  {
+    "nom": "Colombia",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 47330000
+  },
+  {
+    "nom": "Comoros",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 724300
+  },
+  {
+    "nom": "Republic of the Congo",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 4448000
+  },
+  {
+    "nom": "Democratic Republic of the Congo",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 67514000
+  },
+  {
+    "nom": "Cook Islands",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 14974
+  },
+  {
+    "nom": "Costa Rica",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 4667096
+  },
+  {
+    "nom": "Ivory Coast",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 2
+  },
+  {
+    "nom": "Croatia",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 4290612
+  },
+  {
+    "nom": "Cuba",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 11167325
+  },
+  {
+    "nom": "Cura�ao",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 150563
+  },
+  {
+    "nom": "Cyprus",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 865878
+  },
+  {
+    "nom": "Czech Republic",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 10512900
+  },
+  {
+    "nom": "Denmark",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 5623501
+  },
+  {
+    "nom": "Djibouti",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 864618
+  },
+  {
+    "nom": "Dominica",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 71293
+  },
+  {
+    "nom": "Dominican Republic",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 9445281
+  },
+  {
+    "nom": "Ecuador",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 15617900
+  },
+  {
+    "nom": "Egypt",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 83661000
+  },
+  {
+    "nom": "El Salvador",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 6340000
+  },
+  {
+    "nom": "Equatorial Guinea",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 1622000
+  },
+  {
+    "nom": "Eritrea",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 6333000
+  },
+  {
+    "nom": "Estonia",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 1286540
+  },
+  {
+    "nom": "Ethiopia",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 86613986
+  },
+  {
+    "nom": "Falkland Islands",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 2563
+  },
+  {
+    "nom": "Faroe Islands",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 48509
+  },
+  {
+    "nom": "Fiji",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "value": 858038
+  },
+  {
+    "nom": "Finland",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 5445883
+  },
+  {
+    "nom": "France",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 65806000
+  },
+  {
+    "nom": "French Guiana",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 229040
+  },
+  {
+    "nom": "French Polynesia",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 268270
+  },
+  {
+    "nom": "French Southern and Antarctic Lands",
+    "region": "",
+    "subregion": "",
+    "value": 2
+  },
+  {
+    "nom": "Gabon",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 1672000
+  },
+  {
+    "nom": "Gambia",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 2
+  },
+  {
+    "nom": "Georgia",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 2
+  },
+  {
+    "nom": "Germany",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 80523700
+  },
+  {
+    "nom": "Ghana",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 24658823
+  },
+  {
+    "nom": "Gibraltar",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 29752
+  },
+  {
+    "nom": "Greece",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 10815197
+  },
+  {
+    "nom": "Greenland",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 56370
+  },
+  {
+    "nom": "Grenada",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 103328
+  },
+  {
+    "nom": "Guadeloupe",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 403355
+  },
+  {
+    "nom": "Guam",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 159358
+  },
+  {
+    "nom": "Guatemala",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 15438384
+  },
+  {
+    "nom": "Guernsey",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 62431
+  },
+  {
+    "nom": "Guinea",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 10824200
+  },
+  {
+    "nom": "Guinea Bissau",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 1704000
+  },
+  {
+    "nom": "Guyana",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 784894
+  },
+  {
+    "nom": "Haiti",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 10413211
+  },
+  {
+    "nom": "Heard Island and McDonald Islands",
+    "region": "",
+    "subregion": "",
+    "value": 2
+  },
+  {
+    "nom": "Vatican City",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 800
+  },
+  {
+    "nom": "Honduras",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 8555072
+  },
+  {
+    "nom": "Hong Kong",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 7184000
+  },
+  {
+    "nom": "Hungary",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 9906000
+  },
+  {
+    "nom": "Iceland",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 325010
+  },
+  {
+    "nom": "India",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 1236670000
+  },
+  {
+    "nom": "Indonesia",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 237641326
+  },
+  {
+    "nom": "Iran",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 77068000
+  },
+  {
+    "nom": "Iraq",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 34035000
+  },
+  {
+    "nom": "Ireland",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 2
+  },
+  {
+    "nom": "Isle of Man",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 84497
+  },
+  {
+    "nom": "Israel",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 8092700
+  },
+  {
+    "nom": "Italy",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 59829079
+  },
+  {
+    "nom": "Jamaica",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 2711476
+  },
+  {
+    "nom": "Japan",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 127290000
+  },
+  {
+    "nom": "Jersey",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 97857
+  },
+  {
+    "nom": "Jordan",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 6512600
+  },
+  {
+    "nom": "Kazakhstan",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "value": 17099000
+  },
+  {
+    "nom": "Kenya",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 44354000
+  },
+  {
+    "nom": "Kiribati",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 106461
+  },
+  {
+    "nom": "Kuwait",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 3582054
+  },
+  {
+    "nom": "Kyrgyzstan",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "value": 5551900
+  },
+  {
+    "nom": "Laos",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 6580800
+  },
+  {
+    "nom": "Latvia",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 2014000
+  },
+  {
+    "nom": "Lebanon",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 4822000
+  },
+  {
+    "nom": "Lesotho",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "value": 2074000
+  },
+  {
+    "nom": "Liberia",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 4294000
+  },
+  {
+    "nom": "Libya",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 6202000
+  },
+  {
+    "nom": "Liechtenstein",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 36842
+  },
+  {
+    "nom": "Lithuania",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 2950684
+  },
+  {
+    "nom": "Luxembourg",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 537000
+  },
+  {
+    "nom": "Macau",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 2
+  },
+  {
+    "nom": "Macedonia",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 2
+  },
+  {
+    "nom": "Madagascar",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 20696070
+  },
+  {
+    "nom": "Malawi",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 16363000
+  },
+  {
+    "nom": "Malaysia",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 29793600
+  },
+  {
+    "nom": "Maldives",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 317280
+  },
+  {
+    "nom": "Mali",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 15302000
+  },
+  {
+    "nom": "Malta",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 416055
+  },
+  {
+    "nom": "Marshall Islands",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 56086
+  },
+  {
+    "nom": "Martinique",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 394173
+  },
+  {
+    "nom": "Mauritania",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 3461041
+  },
+  {
+    "nom": "Mauritius",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 1257900
+  },
+  {
+    "nom": "Mayotte",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 212600
+  },
+  {
+    "nom": "Mexico",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 118395054
+  },
+  {
+    "nom": "Micronesia",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 2
+  },
+  {
+    "nom": "Moldova",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 3559500
+  },
+  {
+    "nom": "Monaco",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 36136
+  },
+  {
+    "nom": "Mongolia",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 2754685
+  },
+  {
+    "nom": "Montenegro",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 620029
+  },
+  {
+    "nom": "Montserrat",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 4922
+  },
+  {
+    "nom": "Morocco",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 33087700
+  },
+  {
+    "nom": "Mozambique",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 23700715
+  },
+  {
+    "nom": "Myanmar",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 2
+  },
+  {
+    "nom": "Namibia",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "value": 2113077
+  },
+  {
+    "nom": "Nauru",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 9945
+  },
+  {
+    "nom": "Nepal",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 26494504
+  },
+  {
+    "nom": "Netherlands",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 16807300
+  },
+  {
+    "nom": "New Caledonia",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "value": 258958
+  },
+  {
+    "nom": "New Zealand",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "value": 4478810
+  },
+  {
+    "nom": "Nicaragua",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 6071045
+  },
+  {
+    "nom": "Niger",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 17129076
+  },
+  {
+    "nom": "Nigeria",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 173615000
+  },
+  {
+    "nom": "Niue",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 1613
+  },
+  {
+    "nom": "Norfolk Island",
+    "region": "Oceania",
+    "subregion": "Australia and New Zealand",
+    "value": 2302
+  },
+  {
+    "nom": "North Korea",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 24895000
+  },
+  {
+    "nom": "Northern Mariana Islands",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 53883
+  },
+  {
+    "nom": "Norway",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 5077798
+  },
+  {
+    "nom": "Oman",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 3929000
+  },
+  {
+    "nom": "Pakistan",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 184845000
+  },
+  {
+    "nom": "Palau",
+    "region": "Oceania",
+    "subregion": "Micronesia",
+    "value": 20901
+  },
+  {
+    "nom": "Palestine",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 2
+  },
+  {
+    "nom": "Panama",
+    "region": "Americas",
+    "subregion": "Central America",
+    "value": 3405813
+  },
+  {
+    "nom": "Papua New Guinea",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "value": 7059653
+  },
+  {
+    "nom": "Paraguay",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 6783374
+  },
+  {
+    "nom": "Peru",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 30475144
+  },
+  {
+    "nom": "Philippines",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 98678000
+  },
+  {
+    "nom": "Pitcairn Islands",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 56
+  },
+  {
+    "nom": "Poland",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 38533299
+  },
+  {
+    "nom": "Portugal",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 10562178
+  },
+  {
+    "nom": "Puerto Rico",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 3667084
+  },
+  {
+    "nom": "Qatar",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 2024707
+  },
+  {
+    "nom": "Kosovo",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 1733842
+  },
+  {
+    "nom": "R�union",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 821136
+  },
+  {
+    "nom": "Romania",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 20121641
+  },
+  {
+    "nom": "Russia",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 143500000
+  },
+  {
+    "nom": "Rwanda",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 10537222
+  },
+  {
+    "nom": "Saint Barth�lemy",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 8938
+  },
+  {
+    "nom": "Saint Helena",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 2
+  },
+  {
+    "nom": "Saint Kitts and Nevis",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 54000
+  },
+  {
+    "nom": "Saint Lucia",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 166526
+  },
+  {
+    "nom": "Saint Martin",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 2
+  },
+  {
+    "nom": "Saint Pierre and Miquelon",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 6081
+  },
+  {
+    "nom": "Saint Vincent and the Grenadines",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 109000
+  },
+  {
+    "nom": "Samoa",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 187820
+  },
+  {
+    "nom": "San Marino",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 32509
+  },
+  {
+    "nom": "S�o Tom� and Pr�ncipe",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 187356
+  },
+  {
+    "nom": "Saudi Arabia",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 29994272
+  },
+  {
+    "nom": "Senegal",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 13567338
+  },
+  {
+    "nom": "Republic of Serbia",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 7181505
+  },
+  {
+    "nom": "Seychelles",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 90945
+  },
+  {
+    "nom": "Sierra Leone",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 6190280
+  },
+  {
+    "nom": "Singapore",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 5399200
+  },
+  {
+    "nom": "Sint Maarten",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 37429
+  },
+  {
+    "nom": "Slovakia",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 5412008
+  },
+  {
+    "nom": "Slovenia",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 2061405
+  },
+  {
+    "nom": "Solomon Islands",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "value": 561000
+  },
+  {
+    "nom": "Somalia",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 10496000
+  },
+  {
+    "nom": "South Africa",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "value": 52981991
+  },
+  {
+    "nom": "South Georgia",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 2
+  },
+  {
+    "nom": "South Korea",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 50219669
+  },
+  {
+    "nom": "South Sudan",
+    "region": "Africa",
+    "subregion": "Middle Africa",
+    "value": 11296000
+  },
+  {
+    "nom": "Spain",
+    "region": "Europe",
+    "subregion": "Southern Europe",
+    "value": 46704314
+  },
+  {
+    "nom": "Sri Lanka",
+    "region": "Asia",
+    "subregion": "Southern Asia",
+    "value": 20277597
+  },
+  {
+    "nom": "Sudan",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 37964000
+  },
+  {
+    "nom": "Suriname",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 534189
+  },
+  {
+    "nom": "Svalbard and Jan Mayen",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 2655
+  },
+  {
+    "nom": "Swaziland",
+    "region": "Africa",
+    "subregion": "Southern Africa",
+    "value": 1250000
+  },
+  {
+    "nom": "Sweden",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 9625444
+  },
+  {
+    "nom": "Switzerland",
+    "region": "Europe",
+    "subregion": "Western Europe",
+    "value": 8085300
+  },
+  {
+    "nom": "Syria",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 21898000
+  },
+  {
+    "nom": "Taiwan",
+    "region": "Asia",
+    "subregion": "Eastern Asia",
+    "value": 23361147
+  },
+  {
+    "nom": "Tajikistan",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "value": 8000000
+  },
+  {
+    "nom": "United Republic of Tanzania",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 44928923
+  },
+  {
+    "nom": "Thailand",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 65926261
+  },
+  {
+    "nom": "East Timor",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 2
+  },
+  {
+    "nom": "Togo",
+    "region": "Africa",
+    "subregion": "Western Africa",
+    "value": 6191155
+  },
+  {
+    "nom": "Tokelau",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 1411
+  },
+  {
+    "nom": "Tonga",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 103036
+  },
+  {
+    "nom": "Trinidad and Tobago",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 1328019
+  },
+  {
+    "nom": "Tunisia",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 10833431
+  },
+  {
+    "nom": "Turkey",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 75627384
+  },
+  {
+    "nom": "Turkmenistan",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "value": 5240000
+  },
+  {
+    "nom": "Turks and Caicos Islands",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 31458
+  },
+  {
+    "nom": "Tuvalu",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 11323
+  },
+  {
+    "nom": "Uganda",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 35357000
+  },
+  {
+    "nom": "Ukraine",
+    "region": "Europe",
+    "subregion": "Eastern Europe",
+    "value": 45461627
+  },
+  {
+    "nom": "United Arab Emirates",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 8264070
+  },
+  {
+    "nom": "United Kingdom",
+    "region": "Europe",
+    "subregion": "Northern Europe",
+    "value": 63705000
+  },
+  {
+    "nom": "United States of America",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 317101000
+  },
+  {
+    "nom": "United States Minor Outlying Islands",
+    "region": "Americas",
+    "subregion": "Northern America",
+    "value": 2
+  },
+  {
+    "nom": "United States Virgin Islands",
+    "region": "Americas",
+    "subregion": "Caribbean",
+    "value": 106405
+  },
+  {
+    "nom": "Uruguay",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 3286314
+  },
+  {
+    "nom": "Uzbekistan",
+    "region": "Asia",
+    "subregion": "Central Asia",
+    "value": 30183400
+  },
+  {
+    "nom": "Vanuatu",
+    "region": "Oceania",
+    "subregion": "Melanesia",
+    "value": 264652
+  },
+  {
+    "nom": "Venezuela",
+    "region": "Americas",
+    "subregion": "South America",
+    "value": 28946101
+  },
+  {
+    "nom": "Vietnam",
+    "region": "Asia",
+    "subregion": "South-Eastern Asia",
+    "value": 90388000
+  },
+  {
+    "nom": "Wallis and Futuna",
+    "region": "Oceania",
+    "subregion": "Polynesia",
+    "value": 13135
+  },
+  {
+    "nom": "Western Sahara",
+    "region": "Africa",
+    "subregion": "Northern Africa",
+    "value": 567000
+  },
+  {
+    "nom": "Yemen",
+    "region": "Asia",
+    "subregion": "Western Asia",
+    "value": 24527000
+  },
+  {
+    "nom": "Zambia",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 13092666
+  },
+  {
+    "nom": "Zimbabwe",
+    "region": "Africa",
+    "subregion": "Eastern Africa",
+    "value": 12973808
+  }
+]

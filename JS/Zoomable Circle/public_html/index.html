@@ -187,6 +187,7 @@ rect.parent,
     <table id="Selector">
     <div id="jqPager"></div></table>    
     
+    <div id="legend"></div>
     <div id="chart"></div>
     <div id="carte"></div>
     <div id="ZC"></div>
@@ -197,8 +198,9 @@ var margin = 20,
     diameter = 700;
 
 var color = d3.scale.linear()
-        .domain([-1,2,5])
-        .range(["hsl(120,100%,50%)", "white", "hsl(0,100%,50%)"]);
+    .domain([-1,5])
+    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+    .interpolate(d3.interpolateHcl);
 
 var pack = d3.layout.pack()
     .padding(2)
@@ -315,6 +317,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             d3.selectAll("g > *").remove();
             document.getElementById("chart").innerHTML="";
             document.getElementById("carte").innerHTML="";
+            document.getElementById("legend").innerHTML="";
             Filter=[];
             FilterCircle=[];
             FilterMap=[];
@@ -455,7 +458,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
         
         if(Hierarchy.length!==0)
         {
-        source="table"; 
+        source="table";
           Carte();
           ZC();
           TM();
@@ -493,7 +496,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
         var svg2 = d3.select("#carte")
             .append("svg")
             .attr("width", width)
-            .attr("height", height).call(zoom);
+            .attr("height", height);//.call(zoom);
    
             var tableres=res.map(function(g){return g.nom;}); //Hard codé
             
@@ -593,7 +596,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
 
         $(document).on('click', 'circle', function(){ //click on ZC
             resetFilter("all");
-            if(event.path[0].__data__.name!=="undefined"){
+            if(event.path[0].__data__.name!=="undefined"){ //if click on a circle that ius not the global one
                 
                 svg.selectAll(".node--leaf").attr("fill", "white");
                 last.graph="ZC";
@@ -610,7 +613,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 clicked(last.click);
                 last.graph="ZC";
             }
-            else{
+            else{ //click on the global circle
                 if(last.graph!==0){
                     resetFilter("all");
                     reload();
@@ -649,7 +652,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 if(Exclus!==0 && Exclus!==undefined)
                 {
                     if(Exclus.name.toLowerCase()===d.name.toLowerCase())
-                        {return "red";}
+                        {return "steelblue";}
                     else{return "#bbb";}
                 }
                 else{return "#bbb";}
@@ -702,7 +705,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
         var lastgraph;
         
         var zoom="",zoomstate, zoombubble;
-        function clicked(d) {            
+        function clicked(d) {  
             if(d===1){centered==="";}
             var x, y, k, opa, p_evt ;
             
@@ -710,23 +713,26 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
 
                 if(centered!==undefined && centered !== null)   {d3.select("."+centered.id).attr("class", "state "+ centered.id);}
 
-            svg2.selectAll(zoomstate)
+            svg2.selectAll(zoomstate) //dezoom zoomed countries
                 .attr("transform", "translate(0,0)scale(1)")
                 .attr("opacity", 0)
                 .attr("pointer-events", "all")
                 .style("stroke-width", 1 + "px");
-            
-                centered = d;
-                lastgraph=last.graph;
+        
+            svg2.selectAll(".bubble") //dezoom zoomed bubbles
+                .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});  
+        
+                centered = d; //memory for last click
+                lastgraph=last.graph;//memory for last chart
                 var centroid = path.centroid(d);
                 var rowData = $("#jqGrid").jqGrid("getRowData");
                 var cpt=0;
-                while (conv===undefined)
+                while (conv===undefined) //take the first line of the table (that is shown) 
                 {
                     var conv=convert(rowData[cpt]);
                     cpt++;
                 }
-                if(isNaN(centroid[0])){centroid=path.centroid(conv);}
+                if(isNaN(centroid[0])){centroid=path.centroid(conv);} //zoom on this first line
                 x = centroid[0];
                 y = centroid[1];
                 opa=0;
@@ -735,6 +741,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 d3.select("."+d.id).attr("class", "state "+ d.id +" country");
                 zoomstate = Zoom("state");
                 zoombubble= Zoom("bubble");
+                console.log("ici");
+                //if (lastgraph==="ZC"){}
             } 
             else {
                 resetFilter("all");
@@ -746,13 +754,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 p_evt="all";
                 d3.select("."+centered.id).attr("class", "state "+ centered.id);
                 centered = null; 
+                console.log("la");
             }
             
             function convert(data)
             {
                 for(i=0; i<features.length; i++)
                 {
-                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];} //bug ici
+                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];} 
                 }
             }
 
@@ -1098,25 +1107,9 @@ if(source!=="table"){reload();}
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
-      .style("fill", function (d) {
-        if(d.children) //for parents
-        {
-            a= sommeChildren(d);
-            a=a/d[NonHierarchy[NonHierarchy.length-1]]; //number of inhabitant after growth / number before
-            return color(a);
-        }
-        for(i=0; i<dcol.length;i++) //for children
-        {
-            if (dcol[i].nom===d.name)
-            {
-                a=dcol[i].delta;
-                a=parseFloat(a);
-                return color(a);
-            }
-        }
-        return "white";})
-      .attr("stroke", "#bbb");
-    
+      .style("fill", function(d) { return d.children ? color(d.depth) : null; })
+      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+                
     function sommeChildren(d)
     {
         var deltaChildren=0;
@@ -1217,60 +1210,8 @@ var transition = d3.transition()
     circle.attr("r", function(d) { return d.r * k; });
   }
   
-    var linearGradient = svg.append("defs")
-        .append("linearGradient")
-        .attr("id", "linearGradient");
-
-    linearGradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", "hsl(120,100%,50%)");
-      
-    linearGradient.append("stop")
-        .attr("offset", "50%")
-        .attr("stop-color", "white");
-
-    linearGradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", "hsl(0,100%,50%)");
-
-  var data=[-1,2,5];
-  
-  var dragLegend = d3.behavior.drag()
-    .on("drag", changeLegend);  
-     
-  var legend = svg.selectAll("rect")
-    .data(data)
-    .enter();
-    
-legend.append("rect").call(dragLegend).attr("class", "legendZC")
-    .attr("x", 140)
-    .attr("y", 325)
-    .attr("width", 200)
-    .attr("height", 15)
-    .attr("fill", "url(#linearGradient)")
-    .attr("transform", "rotate(-90)");
-    
-
-var textLegend = legend.append("text")
-    .attr("x", 310)
-    .attr("y", function(d,i){return -135 - (200/2)*i;})
-    .attr("cursor", "pointer")
-    .text(function(d) { return d;});
-  
-
-  
-function changeLegend(){
-    console.log(d3.mouse(this)[0]);
-    textLegend.remove();
-    textLegend = legend.append("text")
-        .attr("x", 310)
-        .attr("y", function(d,i){if(i!==0 && i!==2){return d3.mouse(this)[1];} else{return -135 - (200/2)*i;}})
-        .text(function(d,i) { if(i!==0 && i!==2){return -d3.mouse(this)[1]*6/340-1;}else{return d;} }); //regle de trois sur 140/340
-    }
-  
   if (source!=="table"){reload();}
    }
-   
    
    //---------------------------------------------------------------------------
    //                                                                           
@@ -1544,7 +1485,7 @@ function changeLegend(){
         if(Exclus!==0 && Exclus!==undefined)
         {
             if(Exclus.name.toLowerCase()===d.name.toLowerCase())
-                {return "red";}
+                {return "steelblue";}
             else{return "#bbb";}
         }
         else{return "#bbb";}

