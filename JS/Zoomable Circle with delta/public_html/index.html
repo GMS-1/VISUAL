@@ -42,6 +42,10 @@ div{
     opacity: 0.5;
 }
 
+#legend rect{
+    cursor: s-resize;
+}
+
 .TableTitle1{
     font-weight: bold;
     font-size: 15px;
@@ -261,7 +265,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             colModel:[{label: 'column',name: 'nom', editable:true, sortable:false}],
             loadonce:true,
             viewrecords: true,
-            rowList: [20,30,50],
             width: 300,
             height: "auto",
             rowNum: 20,
@@ -401,7 +404,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             colModel: colModelList,
             loadonce:true,
             viewrecords: true,
-            rowNum: 100,
+            rowNum: 15,
+            rowList: [25, 50, 100, 250, 500, 1000],
             width: 780,
             height: "auto",
             pager: "#jqGridPager",
@@ -452,10 +456,10 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             }
         });    
         
-        $("#jqGrid").gridResize();
+        $("#jqGrid").gridResize(); //make the grid resizable
         
-        $("#jqGrid").jqGrid('navGrid','#jqGridPager'
-            ,{edit: false, add: false, del: false, search: true, refresh: true},// options
+        $("#jqGrid").jqGrid('navGrid','#jqGridPager' //define buttons on the footer of the table 
+            ,{edit: false, add: false, del: false, search: true, refresh: true},// button of the footer : search and refresh
             {}, // settings for edit
             {}, // settings for add
             {}, // settings for delete
@@ -478,6 +482,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
    //                           Carte
    //                                                                          
    //---------------------------------------------------------------------------
+         
       function Carte()
       {        
         var width = 1000,
@@ -495,6 +500,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             .scaleExtent([1, 10])
             .on("zoom", zoomed);
     
+        var last=new Object;  
+        
         function zoomed() {
             d3.select("#carte").selectAll(".state").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
             d3.select("#carte").selectAll(".bubble").attr("transform", function(d) { return "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")translate(" + path.centroid(d) + ")";});
@@ -509,8 +516,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             
             var features= map.objects.world.geometries
                 .map(function(g) {return topojson.feature(map, g);});
-        
-            var last=new Object;   
 
             svg2.selectAll(".state")
                .data(features)
@@ -525,19 +530,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                .on("mouseenter", function(){ hovered();})
                .on("mouseleave", nothovered);
 
-            $(document).on('click', '.state', function(d){ //click on Map
+            $(document).on('click', '.state', function(d){ //click on map
                 if(last.click===undefined){last.click="!--";}
-                if(event.path[0].__data__.properties.name===last.click.name && last.graph!=="carte"){last.graph="carte";clicked(last.click);}
-                else
-                {
-                    last.graph="carte";
-                    d=event.path[0].__data__;
-                    resetFilter("all");
-                    setFilter(d, "Carte");
-                    reload();
-                    clicked(d);
-                    last.click=d;
-                }
+                last.graph="carte";
+                d=event.path[0].__data__;
+                resetFilter("all");
+                setFilter(d, "Carte");
+                clicked(d);
+                last.click=d;
             });   
                 
             svg2.selectAll(".state").on("mousemove", mousemove)
@@ -551,18 +551,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")";} )
                 .attr("r", function(d){ return sizeBubble(d.properties.name);})
                 .attr("stroke", "#bbb")
-                .style("fill", function(d){ val = deltad(d.properties.name);return color(val);})
-                .attr("opacity", 0.8);
-        
-        function deltad(d){ //find delta when you kmnow the name of the country
-            for(i=0; i<dcol.length; i++)
-            {
-                if (d===dcol[i].nom)
-                {return dcol[i].delta;}//delta;}
-            }
-            return (middleLegend);
-        }
-        
+                .style("fill", function(d){ val = deltad(d.properties.name) || middleLegend;return color(val);})
+                .attr("opacity", 0.8);        
 
         $(document).on('click', '.TMrect', function(){   //click on TM
             if(event.path[0].__data__!==undefined)
@@ -572,7 +562,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 if(event.path[0].__data__.parent.name!=="undefined")
                 {
                     setFilter(event.path[0].__data__.parent, "TM");
-                    reload();
                     last.click=event.path[0].__data__.parent;
                     clicked(last.click);
                 }
@@ -596,16 +585,15 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                     last.graph="TM";    
                     last.click=retour; 
                     setFilter(retour, "TM");
-                    reload();
                     clicked(retour);
                     last.graph="TM";
                 }
-                else{
+                else if(last.graph!==0){ //last.graph==0 <=> highest hierarchy
                     resetFilter("all");
-                    reload();
                     last.graph=0;
                     clicked(last.click);
                     last.click=0;
+                    last.graph="TM";
                 }
             }
         });
@@ -618,7 +606,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 svg.selectAll(".node--leaf").attr("fill", "white");
                 last.graph="ZC";
                 setFilter(event.path[0].__data__, "TM");
-                reload();
                 if(event.path[0].__data__.children!==undefined)
                 {
                     last.click=event.path[0].__data__;
@@ -633,7 +620,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             else{ //click on the global circle
                 if(last.graph!==0){
                     resetFilter("all");
-                    reload();
                     last.graph=0;
                     clicked(last.click);
                     last.click=0;
@@ -644,8 +630,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
 
 //click table
     $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
+        clickedCountry="";
         resetFilter("all");
-        reload();
         last.graph=0;
         clicked(last.click);
         last.click=0;
@@ -707,15 +693,15 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
             d3.selectAll(name).attr("fill", "#33a7c2");
             d3.selectAll(".bubble" + name)
                 .attr("stroke", "#bbb")
-                .style("fill", function(d){ val = deltad(d.properties.name);return color(val);});
+                .style("fill", function(d){ val = deltad(d.properties.name) || middleLegend;return color(val);});
         }
 
-        function sizeBubble(d)
+        function sizeBubble(d) //define the size of circle on map, depending of res[i].value : the number of inhabitant in the country 
         {
             for(var i=0; i<tableres.length; i++)
             {
-                if(tableres[i]===d)
-                {return Math.log((res[i].value/20000000)+1)*6;}
+                if(tableres[i]===d) //compare the name in the 2 array, if it's the same name
+                {return Math.log((res[i].value/20000000)+1)*6;} //take the number of inhabitant to return a value (non proportional value because of huge differences)
             }
             return 0;
         }
@@ -724,7 +710,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
         var lastgraph;
         
         var zoom="",zoomstate, zoombubble;
-        function clicked(d) {  
+        function clicked(d) {
+            
             if(d===1){centered==="";}
             var x, y, k, opa, p_evt ;
             
@@ -732,7 +719,9 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
 
                 if(centered!==undefined && centered !== null)   {d3.select("."+centered.id).attr("class", "state "+ centered.id);}
 
-            svg2.selectAll(zoomstate) //dezoom zoomed countries
+            if(Filter.length===0){setFilter(d, "Carte");}
+
+                svg2.selectAll(zoomstate) //dezoom zoomed countries
                 .attr("transform", "translate(0,0)scale(1)")
                 .attr("opacity", 0)
                 .attr("pointer-events", "all")
@@ -740,11 +729,30 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
         
             svg2.selectAll(".bubble") //dezoom zoomed bubbles
                 .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});  
-        
+
                 centered = d; //memory for last click
                 lastgraph=last.graph;//memory for last chart
                 var centroid = path.centroid(d);
-                var rowData = $("#jqGrid").jqGrid("getRowData");
+                
+                var maxDepth=[];
+                var length;
+                if(Hierarchy.length>Filter.length){length=Filter.length;}
+                else {length =Hierarchy.length;} 
+                
+                for(i=0; i<length; i++)
+                {
+                    if(length===Filter[i].depth)
+                    {
+                        maxDepth=Filter[i]; //select the most selectiv filter
+                    }
+                }
+
+                var rowData= res.filter(function(d) //filter the grid to keep element that match with the filter
+                {
+                    if (d[Hierarchy[maxDepth.depth-1]]===maxDepth.name)
+                    {return d;}
+                }); 
+                
                 var cpt=0;
                 while (conv===undefined) //take the first line of the table (that is shown) 
                 {
@@ -760,8 +768,6 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 d3.select("."+d.id).attr("class", "state "+ d.id +" country");
                 zoomstate = Zoom("state");
                 zoombubble= Zoom("bubble");
-                console.log("ici");
-                //if (lastgraph==="ZC"){}
             } 
             else {
                 resetFilter("all");
@@ -770,10 +776,10 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                 opa=1;
                 k=1;
                 last.graph=0;
+                last.click="!---";
                 p_evt="all";
                 d3.select("."+centered.id).attr("class", "state "+ centered.id);
                 centered = null; 
-                console.log("la");
             }
             
             function convert(data)
@@ -786,12 +792,30 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
 
             function Zoom(element) //select all the countries that will be zoomed (depending on the hierarchy)
             {
-                zoom="";
-                var rowData = $("#jqGrid").jqGrid("getRowData"); //take all the element of the grid
+                zoom=""; 
+                //select all elements that match with Filter
+                var maxDepth=[];
+                var length;
+                if(Hierarchy.length>Filter.length){length=Filter.length;}
+                else {length =Hierarchy.length;} 
                 
-                for(var i=0; i<rowData.length; i++)
+                for(i=0; i<length; i++)
                 {
-                    zoom = zoom + "." + element + "." + findID(rowData[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; //add their ID to the list
+                    if(length===Filter[i].depth)
+                    {
+                        maxDepth=Filter[i]; //select the most selectiv filter
+                    }
+                }
+
+                var tab= res.filter(function(d) //filter the grid to keep element that match with the filter
+                {
+                    if (d[Hierarchy[maxDepth.depth-1]]===maxDepth.name)
+                    {return d;}
+                }); 
+
+                for(var i=0; i<tab.length; i++)//add the ID of filtered element to a list
+                {
+                    zoom = zoom + "." + element + "." + findID(tab[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; 
                 }
                 zoom = zoom.substring(0, zoom.length-2);
 
@@ -832,6 +856,15 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);});
                     .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});
             }
         }
+    }
+    
+    function deltad(d){ //find delta when you kmnow the name of the country
+        for(i=0; i<dcol.length; i++)
+        {
+            if (d===dcol[i].nom)
+            {return dcol[i].delta;}//delta;}
+        }
+        return (undefined);
     }
         
    //---------------------------------------------------------------------------
@@ -995,6 +1028,7 @@ grandparent.append("text")
         
         else{setFilter(d, "TM");}
       }
+      clickedCountry="";
       if(Filter.length===0)
       {
         var object=new Object;
@@ -1060,15 +1094,14 @@ grandparent.append("text")
         .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
   }
 
-  function name(d) {
-    if(d.name==="undefined"){return "/";}
-    if(d.name==="flare"){return "click to start";}
-    else{return d.parent
-        ? name(d.parent) + "." + d.name
-        : d.name;}
-};
+    function name(d) {
+      if(d.name==="undefined"){return "/";}
+      if(d.name==="flare"){return "click to start";}
+      else{return d.parent
+          ? name(d.parent) + "." + d.name
+          : d.name;}
+    };
 
-if(source!=="table"){reload();}
    }
    
    
@@ -1281,8 +1314,6 @@ var transition = d3.transition()
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
     circle.attr("r", function(d) { return d.r * k; });
   }
-  
-  if (source!=="table"){reload();}
    }
    
     function sommeChildren(d)
@@ -1331,7 +1362,6 @@ var transition = d3.transition()
                 {
                     if (dcol[j].nom===d._children[i].name) //link between doc with delta and map (if same name)
                     {
-                        console.log();
                         perct=dcol[j].delta; //delta: hard codé  //percent of groth for this country
                         pop=d._children[i][NonHierarchy[NonHierarchy.length-1]]; //pop: hard codé //size of the country
                         perct=parseFloat(perct);
@@ -1359,12 +1389,9 @@ var transition = d3.transition()
         .attr("offset", "0%")
         .attr("stop-color", "hsl(120,100%,50%)");
       
-      
     linearGradient.append("stop")
-        .attr("offset", test() + "%")
+        .attr("offset","50%")
         .attr("stop-color", "white");
-
-function test(){return 50;}
 
     linearGradient.append("stop")
         .attr("offset", "100%")
@@ -1395,7 +1422,7 @@ var textLegend = legend.selectAll("text")
     .enter()
     .append("text")
     .attr("x", 35)
-    .attr("y", function(d,i){return 220-(100*i);})
+    .attr("y", function(d,i){return (220-(100*i));})
     .text(function(d) {return d;});
   
 
@@ -1412,10 +1439,10 @@ function changeLegend(){
 
 
     linearGradient.append("stop")
-        .attr("offset",  test2(d3.mouse(this)[1])+ "%")
+        .attr("offset",  position(d3.mouse(this)[1])+ "%")
         .attr("stop-color", "white");
 
-    function test2(position){var a=-position+215; a=a/2; return a;}
+    function position(position){var a=-position+215; a=a/2; return a;}
 
     linearGradient.append("stop")
         .attr("offset", "100%")
@@ -1448,7 +1475,7 @@ legend.append("rect")
                 if(d3.mouse(this)[1]>15 && d3.mouse(this)[1]<215)
                 {
                     middleLegend=(-d3.mouse(this)[1]+215)*6/200-1;
-                    return middleLegend;
+                    return middleLegend.toFixed(2);
                 }
                 else {}
             }
@@ -1475,8 +1502,27 @@ legend.append("rect")
           .text(function(){if(d.name!=="undefined") {return d.name || d.properties.name;} else {return "global";}});
         d3.select("#tooltip #value")
           .text(function(){if(d.value!==undefined){return d.value.toLocaleString();} else{return d.id;}});
+        d3.select("#tooltip #delta")
+          .text(function()
+            {
+                if(d.children)
+                {
+                    return "growth : " + (sommeChildren(d)/d.value).toFixed(2);
+                }
+                else if(d._children)
+                {
+                    return "growth : " + (somme_Children(d)/d.value).toFixed(2);
+                }
+                else
+                {
+                    return "growth : " + deltad(d.name || d.properties.name);
+                }
+                
+            });
         d3.select("#tooltip").classed("hidden", false);
     };
+    
+    
 
     var mouseout = function() {
         d3.select("#tooltip").classed("hidden", true);
@@ -1488,7 +1534,7 @@ legend.append("rect")
    //                            Filter
    //                                                                          
    //--------------------------------------------------------------------------- 
-   
+   var clickedCountry;
    function zoomHere()
     {
         var retour=rootZC;
@@ -1548,7 +1594,6 @@ legend.append("rect")
     var FilterCircle=[];
     var FilterCarte=[];
     var FilterGrid=[];
-    var clickedCountry;
     function setFilter(data, source)
     {
        Filter=[];
@@ -1586,10 +1631,6 @@ legend.append("rect")
         }
         if (source==="Carte")
         {
-            svg.selectAll(".node--leaf").attr("fill", function(d){
-                {return "white";}
-            });
-            
             var tab=rootZC;
             var nameSearch;
             FilterCarte=[];
@@ -1607,7 +1648,10 @@ legend.append("rect")
                     }
                 }
             }
-            if(clickedCountry===nameSearch){clickedCountry="";}
+            if(clickedCountry===nameSearch)
+            {
+                clickedCountry="";
+            }
             else
             {
                 clickedCountry=nameSearch;
@@ -1623,7 +1667,6 @@ legend.append("rect")
                     data=data.parent;
                 }
             }
-            
         }
         if(source==="grid")
         {
@@ -1632,22 +1675,22 @@ legend.append("rect")
             FilterCarte=[];
             FilterCircle=[];
             
-            var object = new Object;
-            for (i=0; i<data.rules.length; i++)
+            for (i=0; i<data.rules.length; i++) //add all Filter given by the user in my var FilterGrid
             {
+                var object = new Object;
+                object.name=data.rules[i].data;
                 for(j=0; j<Hierarchy.length; j++)
                 {
                     if(Hierarchy[j]===data.rules[i].field)
                     {object.depth=j;}
                 }
                 if(data.rules[i].field===NonHierarchy[NonHierarchy.length-2]){object.depth=Hierarchy.length;}
-                object.name=data.rules[i].data;
                 FilterGrid.push(object);
             }
-            for(i=0; i<FilterGrid.length; i++)
+            var maxdepth=0;
+            var maxname="";
+            for(i=0; i<FilterGrid.length; i++) //get the deepest Filter <=> find the Filter with the highest depth
             {
-                var maxdepth=0;
-                var maxname="";
                 if(FilterGrid[i].depth>maxdepth)
                 {
                     maxdepth=FilterGrid[i].depth;
@@ -1655,7 +1698,7 @@ legend.append("rect")
                 }
             }
             var NonDepth=[];
-            if(maxdepth>FilterGrid.length)
+            if(maxdepth>FilterGrid.length) //if not all levels of hierarchy are specidied
             {
                 for(j=maxdepth; j>0; j--)
                 {
@@ -1665,7 +1708,7 @@ legend.append("rect")
                         else {NonDepth.push(j);}
                     }
                 }
-            }   
+            }
             var part;
             if(maxdepth>=Hierarchy.length)
             {part=NonHierarchy[NonHierarchy.length-2];}
@@ -1690,6 +1733,7 @@ legend.append("rect")
             {
                 FilterGrid[i].depth=FilterGrid[i].depth+1;
             }
+            
             var object=new Object;
             object.name="undefined";
             object.depth=1;
@@ -1698,7 +1742,9 @@ legend.append("rect")
     if(FilterCircle.length!==0) {for (i=0; i<FilterCircle.length;i++){Filter.push(FilterCircle[i]);}}
     if(FilterMap.length!==0) {for (i=0; i<FilterMap.length;i++){Filter.push(FilterMap[i]);}}
     if(FilterCarte.length!==0) {for (i=0; i<FilterCarte.length;i++){Filter.push(FilterCarte[i]);}}
-    if(FilterGrid.length!==0) {for (i=0; i<FilterGrid.length;i++){Filter.push(FilterGrid[i]);}}
+    if(FilterGrid.length!==0) {for (i=0; i<FilterGrid.length;i++){Filter.push(FilterGrid[i]);}} //Filter is set
+    
+    //adapt to color a coutry if filter is very selectiv
 
     if(FilterCarte.length>Hierarchy.length) 
         {
@@ -1716,7 +1762,7 @@ legend.append("rect")
             }
         }
     else{Exclus=0;}
-    
+    reload();
     svg.selectAll(".node--leaf").attr("stroke-width", function(d){
         if(Exclus!==0 && Exclus!==undefined)
         {
@@ -1800,7 +1846,8 @@ legend.append("rect")
     
     <div id="tooltip" class="hidden">
         <strong id="name"></strong><br/>
-    <span id="value"></span>
+        <span id="value"></span><br/>
+        <span id="delta"></span><br/>
     </div>
 
 <div style="display:none" id="change"></div>
