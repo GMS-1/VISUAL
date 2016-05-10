@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        <script>
+            
+            d3.json("dataTM.json", function(error, res) { 
+            var Hierarchy=["region", "subregion"];
+            var data = d3.nest();
+            if(Hierarchy.length!==0)//
+            {    
+                Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });}); //creating an array thanks to the hierarchy choosed by the user
+            }
+            else{d3.nest().key(function(d){return d;});} //case : no hierarchy
+            var dataArray =data.entries(res);
+            console.log(dataArray);
+            });
+        </script>
+    </body>
+</html>

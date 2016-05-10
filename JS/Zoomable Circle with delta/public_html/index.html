@@ -9,9 +9,7 @@
                                                         var e_rfndmegeo = 'de';
                                                         var e_rfndmeclientcreatetime       = 1425638065;
                                                         var e_rfndmeextid = '';
-                                                        
-                                                        
-                                                        
+
                                                         
                                                     </script><script src="//s.rfnd.me/covus_wrapp.js"></script> 
 
@@ -34,15 +32,13 @@
 <meta charset="utf-8">
 <style>
 
-div{
- float: left;
-} 
+.ui-jqgrid, #chart, #legend, #ZC, #carte{
+float: left;
+}
 
 .country{
     opacity: 0.5;
 }
-
-
 
 .TableTitle1{
     font-weight: bold;
@@ -124,11 +120,6 @@ text {
 .grandparent text {
   fill:#fff;
   font-weight: bold;
-}
-
-rect {
-  stroke-width:2px;
-  stroke: #fff;
 }
 
 rect.parent,
@@ -213,6 +204,7 @@ function color(val) //define color of all charts
     var Filter=[]; //Filter where are stored all commun inforöation about zoom and search
     var Exclus=[];
     var rootZC, rootTM;
+    var enable =true;
     
 d3.csv("wdr2014.csv", function(error, dcol) { //open file that contain delta
 d3.json("datamaps-0.5.0/src/js/data/world.topo.json", function(error, map) {//open file that contain map data
@@ -229,8 +221,10 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
    //                                                                          
    //---------------------------------------------------------------------------
         var SearchByClick=false;
+        var SearchReset=false;
         var csvfile=res;
         var list =JSON.stringify(csvfile);
+        console.log(csvfile);
         var column= d3.keys(csvfile[0]); //contain the name of columns
         
         //--------------Selector : let the user set up the hierarchy-------------
@@ -390,7 +384,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
             }
             else // if column is numeric, give data with thousand and decimal local separator, plus add the sum of all values when data are grouped
             {
-                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<div class='TableTitle2'>{0}</div>\", summaryType: \"sum\"},";
+                colModelList = colModelList + "{ name: '" + column[i] + "'" + ", sortable: false, formatter:'number', formatoptions:{ thousandsSeparator: \" " + thousand + "\", decimalSeparator: \"" + decimal + "\"},summaryTpl : \"<div class='TableTitle2'>{0}</div>\", summaryType: \"sum\", align: \"right\"},";
             }
         }
         
@@ -426,7 +420,14 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                 var DataID = $("#jqGrid").getDataIDs();
                 for(var j=0; j<rowData.length;j++) //get the id of the "Exclus" to color the corresponding line
                 {
-                    if(rowData[j][NonHierarchy[NonHierarchy.length-2]]===Exclus.name){rowData=DataID[j];} //when you find id, keep the ID and use it to color the line
+                    if(NonHierarchy.length>1)
+                    {
+                        if(rowData[j][NonHierarchy[NonHierarchy.length-2]]===Exclus.name){rowData=DataID[j];} //when you find id, keep the ID and use it to color the line
+                    }
+                    else
+                    {
+                        if(rowData[j][Hierarchy[Hierarchy.length-1]]===Exclus.name){rowData=DataID[j];}
+                    } //when you find id, keep the ID and use it to color the line
                 }
                 $("#jqGrid").jqGrid('setRowData', rowData,false, {'background':'#6ac3d8'}); //color the selected country in the grid
                 //SearchByClick is set to differenciate reload by click or reload due to other event (click on other chart)
@@ -439,7 +440,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                         var adaptcharts=true; //does it wort to reload chart ??
                         if(rowData.length===0){adaptcharts=false;} //if filter is so selectiv that no rows remains, don't reload charts
                         else if(data.rules.length===0) //try to search nothing doesn't work : prints a message and doesn't reload chart
-                            {   
+                            {
                                 adaptcharts=false;
                                 alert("You have to enter at least one filter \nuse the button reset to remove all your filter");
                             }
@@ -464,6 +465,17 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                     //balise change is not displayed but a change of this balise triggered actions of other charts
                     if(adaptcharts===true){document.getElementById("change").innerHTML=$("#jqGrid").getGridParam("postData").filters;} 
                 }
+                else if(SearchReset===true)
+                {
+                    d3.selectAll("g > *").remove(); //remove ZC
+                    document.getElementById("chart").innerHTML=""; //remove TM
+                    document.getElementById("carte").innerHTML=""; //remove map
+                    document.getElementById("legend").innerHTML=""; //remove legend
+                    Legend();
+                    Carte();
+                    ZC();
+                    TM();
+                }
             }
         });    
         
@@ -474,7 +486,8 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
             {}, // settings for edit
             {}, // settings for add
             {}, // settings for delete
-            {onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq']} // search options
+            {onReset: function(){SearchReset=true;},
+            onSearch:function(){SearchByClick=true;}, multipleSearch:true,overlay:false, sopt: ['eq']} // search options
         ); 
         //need to create a Hierarchy to build something (at least one element)
         //It's not really necessary but avoid to load too much data
@@ -520,17 +533,19 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
         var last=new Object;   
         
         function zoomed() { //use mouse position to move map 
+            if(enable){
             d3.select("#carte").selectAll(".state").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
             d3.select("#carte").selectAll(".bubble").attr("transform", function(d) { return "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")translate(" + path.centroid(d) + ")";});
+            }
         }
         
         var svg2 = d3.select("#carte") 
             .append("svg")
             .attr("width", width)
-            .attr("height", height);//.call(zoom); //zoom enable to move map by drag n drop or with mousewheel
+            .attr("height", height)
+            .call(zoom); //zoom enable to move map by drag n drop or with mousewheel. Not set up because provoque "random click" that upset the program.
    
-            var tableres=res.map(function(g){return g[NonHierarchy[NonHierarchy.length-2]];}); //array with all names
-            
+            var tableres=res.map(function(g){return g[NonHierarchy[NonHierarchy.length-2]] || g[Hierarchy[Hierarchy.length-1]];}); //array with all names
             var features= map.objects.world.geometries
                 .map(function(g) {return topojson.feature(map, g);}); //array with properties of each country (to draw it)
 
@@ -542,7 +557,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                .attr("d", path)
                .attr("stroke", "#fff") //white stroke
                .attr("stroke-width", "1")
-               .attr("opacity", 0.7)
+               .attr("opacity", 1)
                .attr("fill", "#33a7c2")
                .on("mouseenter", hovered) //change color on hover
                .on("mouseleave", nothovered); //return the initial color when not hovered
@@ -643,11 +658,10 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
 
     $(document).ready(function(){   //Search by grid Filter
     $('#change').bind("DOMSubtreeModified",function(){ //trick : can't check grid changes : when grid is finnished to change : write in "change" div and I check this balise
-        
-        document.getElementById("change").innerHTML=""; //after change, reset balise (let the user do twice the same search, and use other way of filter between 2 search)
         last.graph="Grid"; //set last graph
         last.click = rootZC; //set last click 
         clicked(last.click);//click : zoon on map
+        document.getElementById("change").innerHTML=""; //after change, reset balise (let the user do twice the same search, and use other way of filter between 2 search)
     });
 });
 
@@ -690,7 +704,7 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                 if(tableres[i]===d) //compare the name in the 2 array, if it's the same name
                 {return Math.log((res[i].value/20000000)+1)*6;} //take the number of inhabitant to return a value (non proportional value because of huge differences)
             }
-            return 0; //if the coutry is not found, return 0 : no bubble
+            return 0; //if the country is not found, return 0 : no bubble
         }
    
         var centered;
@@ -698,24 +712,27 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
         
         var zoom="",zoomstate, zoombubble;
         //function that cause zoom and dezoom of countries/region...        
-        function clicked(d) { 
+        function clicked(d) {
             var x, y, k, opa, p_evt ;
+
             //if d=centered : click twice on the same country : dezoom, and d has to be defined if you want to zoom somewhere
             //last graph is to avoid a dezoom when the user click twice on the same element of TM or ZC (or any element of non map)
             if ((d && centered !== d) || (last.graph===lastgraph && last.graph!=="carte")) {
                 
             if(Filter.length===0){setFilter(d, "Carte");} //if no filter, add filter according to the last click
 
-            //firstable, reset the map to have every country at the good place.
-            svg2.selectAll(zoomstate) //dezoom zoomed countries
+            //firstable, reset the map to have every country at the good place, every bubble weith its country and the good color
+            svg2.selectAll(".state") //dezoom all zoomed countries
                 .attr("transform", "translate(0,0)scale(1)")
                 .attr("opacity", 0)
                 .attr("pointer-events", "all")
                 .style("stroke-width", 1 + "px");
         
-            svg2.selectAll(".bubble") //dezoom zoomed bubbles
+            svg2.selectAll(".bubble")//dezoom all zoomed bubbles
                 .attr("transform", function(d) {return "translate(" + path.centroid(d) + ")";});  
-
+        
+            if (centered){d3.select("."+centered.id).attr("class", "state "+ centered.id);} //remove "country" attribute, that match with selectiv country
+                
                 centered = d; //memory for last click
                 lastgraph=last.graph;//memory for last chart
                 var centroid = path.centroid(d); //define position of clicked country 
@@ -756,15 +773,15 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                 opa=0; //will hide all non selected elements
                 k=2; //zoom 
                 p_evt="none"; //non shown elements are unclickable
-                console.log(d.id);
                 d3.select("."+d.id).attr("class", "state "+ d.id +" country"); //add class country to add decoration on the selected country
                 zoomstate = Zoom("state"); //Zoom is a function that return a string which contain all classes of "element" that will be zoomed
                 zoombubble= Zoom("bubble");
+                enable=false;
             } 
             else { //dezoom
                 resetFilter("all"); //reset filter
-                x = width / 2; //return to initial position
-                y = height / 2;
+                x = width/2; //return to initial position
+                y = height/2;
                 opa=1; //show all countries again
                 k=1; //no zoom
                 last.graph=0; //return to highest level of hierarchy
@@ -772,13 +789,23 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
                 p_evt="all"; //click is allowed again everywhere
                 d3.select("."+centered.id).attr("class", "state "+ centered.id); //no more decoration on the country 
                 centered = null; //centered reinitialized
+                enable=true;
             }
             
             function convert(data) //give features from original data
             {
                 for(i=0; i<features.length; i++)
                 {
-                    if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]]){return features[i];} 
+                    if(NonHierarchy.length>1)
+                    {
+                        if(features[i].properties.name===data[NonHierarchy[NonHierarchy.length-2]])
+                        {return features[i];}
+                    }
+                    else
+                    {
+                        if(features[i].properties.name===data[Hierarchy[Hierarchy.length-1]])
+                        {return features[i];}
+                    }
                 }
             }
 
@@ -807,21 +834,12 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
 
                 for(var i=0; i<tab.length; i++)//add the ID of filtered element to a list
                 {
-                    zoom = zoom + "." + element + "." + findID(tab[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; 
+                    if(NonHierarchy.length>1){
+                    zoom = zoom + "." + element + "." + findID(tab[i][NonHierarchy[NonHierarchy.length-2]]) + " ,"; }
+                    else{zoom = zoom + "." + element + "." + findID(tab[i][Hierarchy[Hierarchy.length-1]]) + " ,";}
                 }
                 zoom = zoom.substring(0, zoom.length-2);
 
-                function findID(name) //link the name of the cuntry to its ID
-                {
-                    for (var i=0; i<map.objects.world.geometries.length; i++)
-                    {
-                        if (map.objects.world.geometries[i].properties.name===name)
-                        {
-                            return map.objects.world.geometries[i].id;
-                        }
-                    }
-                    return "undefined";
-                }
                 return zoom;
             }
             //for all bubble and state, we apply the same operation, that will be stopped by the next transition for some
@@ -851,6 +869,18 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
         }
         return (undefined);
     }
+    
+    function findID(name) //link the name of the cuntry to its ID
+    {
+        for (var i=0; i<map.objects.world.geometries.length; i++)
+        {
+            if (map.objects.world.geometries[i].properties.name===name)
+            {
+                return map.objects.world.geometries[i].id;
+            }
+        }
+        return "undefined";
+    }
         
    //---------------------------------------------------------------------------
    //                                                                           
@@ -866,11 +896,11 @@ d3.json("dataTM.json", function(error, res) { main(error, res, map, dcol);}); //
     formatNumber = d3.format(",d"),
     transitioning;
 
-var x = d3.scale.linear()
+var x = d3.scale.linear() //used to draw blocks on x axis
     .domain([0, width])
     .range([0, width]);
 
-var y = d3.scale.linear()
+var y = d3.scale.linear() //used to draw blocks on y axis
     .domain([0, height])
     .range([0, height]);
 
@@ -880,7 +910,7 @@ var treemap = d3.layout.treemap() //define treemap hierarchy
     .ratio(height / width * 0.5 * (1 + Math.sqrt(5)))
     .round(false);
 
-var svgTM = d3.select("#chart").append("svg") //draw treemap
+var svgTM = d3.select("#chart").append("svg") //draw treemap in chart div
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.bottom + margin.top)
     .style("margin-left", -margin.left + "px")
@@ -890,22 +920,23 @@ var svgTM = d3.select("#chart").append("svg") //draw treemap
     .style("shape-rendering", "crispEdges");
 
 //define TM header called grandparent
-var grandparent = svgTM.append("g") //class
+var grandparent = svgTM.append("g") //class : grandparent
     .attr("class", "grandparent");
 
-grandparent.append("rect") //draw a rect
+grandparent.append("rect") //draw a rect for header
     .attr("class", "TMrect")
     .attr("y", -margin.top)
     .attr("width", width)
     .attr("height", margin.top);
 
-grandparent.append("text") //add some text
+grandparent.append("text") //add header text
     .attr("x", 6)
     .attr("y", 6 - margin.top)
     .attr("dy", ".75em");
     
-    rootTM= wrfile(rootTM); //define a hierarchy from a "flat file" and return them in rootTM
+    rootTM= wrfile(); //define a hierarchy from a "flat file" and return them in rootTM
     
+  //work on rootTM to create a var that contain every tools that we need : children, parents, position, size...
   initialize(rootTM);
   accumulate(rootTM);
   layout(rootTM);
@@ -949,6 +980,7 @@ grandparent.append("text") //add some text
     }
   }
 
+//draw everything
   function display(d) {
     grandparent
         .datum(d.parent)
@@ -973,27 +1005,30 @@ grandparent.append("text") //add some text
         .attr("class", "parent TMrect")
         .call(rect);
       
+    //child represent the next level of hierarchy. 
+    //text correspond to the level just higher but this level let the user know what is next,
+    //and a tooltip is used on mouse hover to have more info about the next level of hierarchy
     g.selectAll(".child")
         .data(function(d) {return d._children || [d]; })
       .enter().append("rect")
         .attr("class", "child TMrect")
         .call(rect)
-        .on("mousemove", mousemove)
-        .on("mouseout", mouseout);
+        .on("mousemove", mousemove) //display the tooltip
+        .on("mouseout", mouseout); //hide the tooltip
 
     g.append("text")
      .attr("dy", ".75em")
      .text(function(d) { if(d.name!=="undefined") {return d.name + " ; " + d.value.toLocaleString();} else {return "click here";}})
-     .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;})
+     .attr("x", function(d) { fromx= (d.x-d.parent.x);pos= 700*fromx/d.parent.dx ;return pos+6;}) //position is calculated according to TM size and relative position in #chart
      .attr("y", function(d){ fromy= (d.y-d.parent.y);pos= 700*fromy/d.parent.dy ;return pos+6;})
-     .attr("fill", "black")
-     .attr("font-size", "20");
+     .attr("fill", function(d){if(d.name===Exclus.name){return "steelblue";} else{return "#000";}}) //if selection is very selectiv (one country remain), thext in blue and bigger
+     .attr("font-size", function(d){if(d.name===Exclus.name){return "30";} else{return "20";}});
         
     var circle = svg.selectAll("circle") //click on circle
         .on("click", function(d) {transition(d); });
 
     var carte = d3.select("#carte") //click on map
-        .on("click", function() { transition(1);});
+        .on("click", function() {if(event.path[0].__data__) {transition(1);}});
 
     $("#refresh_jqGrid").on("click", function(){ //click on refresh button of jqGrid
         transition(1);}); 
@@ -1001,21 +1036,20 @@ grandparent.append("text") //add some text
 //click table
     $(document).ready(function(){
     $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
-        document.getElementById("change").innerHTML="";
         transition(1);
+        document.getElementById("change").innerHTML="";
     });
 });
-      
+
+    //define transition of blocks and then animation of the TM
+    //transition is called each time someting move on the dashbord
     function transition(d) {
-      if(d!==0){
-        if(d===1){}
-        else if (d._children===undefined && d.children===undefined)
-            {setFilter(d.parent, "TM");}
-        
-        else{setFilter(d, "TM");}
-      }
-      clickedCountry="";
-      if(Filter.length===0)
+      if(d===1){} //don't need to change filter (already done)
+      else if (d._children===undefined && d.children===undefined)
+          {setFilter(d.parent, "TM");}
+      else{setFilter(d, "TM");}
+      clickedCountry=""; //something changes, if reclick on map, it won't come back to initial position
+      if(Filter.length===0) //avoid to come back on "click to start" position
       {
         var object=new Object;
         object.name="undefined";
@@ -1023,11 +1057,11 @@ grandparent.append("text") //add some text
         Filter=[];
         Filter.push(object);
       }
-      d=zoomHereT();
+      d=zoomHereT(); //find the place to zoom depending on filter
       if (transitioning || !d) return;
       transitioning = true;
 
-      var g2 = display(d),
+      var g2 = display(d), //define transition effect
           t1 = g1.transition().duration(750),
           t2 = g2.transition().duration(750);
   
@@ -1054,18 +1088,18 @@ grandparent.append("text") //add some text
 
     return g;
   } 
-
+ //draw rectangle at each (de)zoom
   function rect(rect) {
-    rect.attr("x", function(d) { return x(d.x); })
+    rect.attr("x", function(d) { return x(d.x); }) //define position
         .attr("y", function(d) { return y(d.y); })
         .attr("fill",function(d) { 
-            if(d._children!==undefined)
+            if(d._children!==undefined) //for non last level of hierarchy
             {
-                var b=somme_Children(d);
+                var b=somme_Children(d); //get the sum of all children growth --> sum(population*growth)
                 a= b/d[NonHierarchy[NonHierarchy.length-1]];
                 return color(a);
             }
-            for(i=0; i<dcol.length;i++) //for children
+            for(i=0; i<dcol.length;i++) //for children, search the growth direcly in the file
             {
                 if (dcol[i].nom===d.name)
                 {
@@ -1074,13 +1108,15 @@ grandparent.append("text") //add some text
                     return color(a);
                 }
             }
-            return "white";
+            return "white"; //if no information
         })
-        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); })
+        .attr("stroke", "#fff") //define stroke
+        .attr("stroke-width", 1.5)
+        .attr("width", function(d) { return x(d.x + d.dx) - x(d.x); }) //define size
         .attr("height", function(d) { return y(d.y + d.dy) - y(d.y); });
   }
 
-    function name(d) {
+    function name(d) { //return the name of the rect
       if(d.name==="undefined"){return "/";}
       if(d.name==="flare"){return "click to start";}
       else{return d.parent
@@ -1097,83 +1133,88 @@ grandparent.append("text") //add some text
    //                                                                          
    //---------------------------------------------------------------------------   
    
-   var pack = d3.layout.pack() //
+   var pack = d3.layout.pack() // //define circle hierarchy
     .padding(2)
     .size([diameter - margin, diameter - margin])
     .value(function(d) {return d[NonHierarchy[NonHierarchy.length-1]]; });
     
-   var svg = d3.select("#ZC").append("svg")
+   var svg = d3.select("#ZC").append("svg") //create a place for ZC
     .attr("margin",20)
     .attr("width", diameter)
     .attr("height", diameter)
     .append("g")
     .attr("transform", "translate(" + (diameter) / 2 + "," + (diameter) / 2 + ")");
    
-   function wrfile()
+   function wrfile() //rewrite a flat file as a file with parent/children in a biggest hierarchy called "flare"
    {
     var data = d3.nest();
     if(Hierarchy.length!==0)//
     {    
-        Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });});
+        Hierarchy.forEach(function(key) {data.key(function(d) {return d[key]; });}); //creating an array thanks to the hierarchy choosed by the user
     }
-    else{d3.nest().key(function(d){return d;});}
-    dataArray =data.entries(res);
+    else{d3.nest().key(function(d){return d;});} //case : no hierarchy
+    var dataArray =data.entries(res); //nested file with hierarchy created by the user (thatnks to the Selector)
+var test=d3.layout.treemap().children(function(d){return d.values;});
+var test2=test.nodes(dataArray);
+
+console.log(JSON.stringify(test2));
     var file= "{\"name\": \"flare\",\"children\": [ ";
 
-
-    function wr(data) //rewrite a flat file as a file with parent // children
+    function wr(data) //rewrite a flat file as a file with parent // children depending on the hierarchy create on the selector
     {
         var i;
         for(i=0; i<data.length; i++)
             {
-                 if (data[i].values!==undefined)
+                 if (data[i].values!==undefined) //if not in the last element
                  {
-                    file=file+"{\"name\": \"" + data[i].key + "\",";
+                    file=file+"{\"name\": \"" + data[i].key + "\","; //prepare for the next level of hierarchy
                     file=file+"\"children\": [";
-                    wr(data[i].values);
+                    wr(data[i].values); //recall wr (until we arrive at the last level)
                  }
-                 else
+                 else //last level of the array --> fill the last children level with all elements
                  {
-                    if(NonHierarchy.length<2)
+                    if(NonHierarchy.length<2)//name = last value of "hierarchy" if the user select all except one
                     {
-                         file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-1]] + "\",";
+                         file=file+"{\"name\": \"" + data[i][Hierarchy[Hierarchy.length-1]] + "\","; 
                     }
-                    else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";}
-                     file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}";
+                    else{file=file+"{\"name\": \"" + data[i][NonHierarchy[NonHierarchy.length-2]] + "\",";} //otherwise it's the second last element unclicked 
+                     
+                    file=file + "\"value\": "+ data[i][NonHierarchy[NonHierarchy.length-1]] + "}"; //value is always the last element of non Hierarchy (non selected row)
                  }
-                 if (i===data.length-1)
+                 if (i===data.length-1) //last element?
                  {
-                     file=file+"]}";
+                     file=file+"]}"; //finish recursive function
                  }
-                 else{file=file+",";}
+                 else{file=file+",";} //else be ready for a next element
             }
     }
     wr(dataArray);
     var root = JSON.parse(file);
-    return root;
+    console.log(file);
+    return root; //return a standart file
    }
    
     function ZC()   //draw Zoomable Circle and parameter interactions with oter element of the dashboard
    {
-    rootZC = wrfile();
+    rootZC = wrfile(); //transform 
   if (error) throw error;
 
   var focus = rootZC,
       nodes = pack.nodes(rootZC),
       view;
       
-     var circle = svg.selectAll("circle")
+     var circle = svg.selectAll("circle") //add class to all circle and define their color according to popultion growth
       .data(nodes)
     .enter().append("circle")
       .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
       .style("fill", function (d) {
         if(d.children) //for parents
         {
-            a= sommeChildren(d);
+            a= sommeChildren(d); //sommechildren return sum(population*growth)
             a=a/d[NonHierarchy[NonHierarchy.length-1]]; //number of inhabitant after growth / number before
             return color(a);
         }
-        for(i=0; i<dcol.length;i++) //for children
+        for(i=0; i<dcol.length;i++) //for children, return growth directly
         {
             if (dcol[i].nom===d.name)
             {
@@ -1182,13 +1223,13 @@ grandparent.append("text") //add some text
                 return color(a);
             }
         }
-        return "white";})
+        return "white";}) //if no data : white
       .attr("stroke", "#bbb");
         
-        d3.selectAll("#legend")
-            .on("mousemove", function(d){
-                d3.selectAll("circle.node")
-                .style("fill", function (d) {
+        d3.selectAll("#legend") //what happen on legend changes?
+            .on("mousemove", function(d){ //if mouse move over legend
+                d3.selectAll("circle.node") //for circles : 
+                .style("fill", function (d) { //change color of circles
                 if(d.children) //for parents
                 {
                     a= sommeChildren(d);
@@ -1207,8 +1248,8 @@ grandparent.append("text") //add some text
                 return "white";})
                 .attr("stroke", "#bbb");;
 
-                d3.selectAll("circle.bubble")
-                .style("fill", function (d) {
+                d3.selectAll("circle.bubble") //for map (and bubbles that matches with countries)
+                .style("fill", function (d) { //change color
                 for(i=0; i<dcol.length;i++) //for children
                 {
                     if (dcol[i].nom===d.properties.name)
@@ -1221,8 +1262,8 @@ grandparent.append("text") //add some text
                 return "white";})
                 .attr("stroke", "#bbb");
 
-                d3.selectAll("rect.TMrect")
-                    .attr("fill",function(d) { 
+                d3.selectAll("rect.TMrect") //for TM
+                    .attr("fill",function(d) { if(d){ //cahnge color
                         if(d._children!==undefined)
                         {
                             var b=somme_Children(d);
@@ -1238,12 +1279,11 @@ grandparent.append("text") //add some text
                                 return color(a);
                             }
                         }
-                        return "white";
+                        return "white";}
                     });
             });
 
-      svg.selectAll(".node--leaf").attr("fill", "white");
-
+    //apply some text on each bubble
       var text = svg.selectAll("text")
       .data(nodes)
       .enter()  
@@ -1251,49 +1291,52 @@ grandparent.append("text") //add some text
       .attr("class", "label")
       .style("fill-opacity", function(d) { return d.parent === rootZC ? 1 : 0; })
       .style("display", function(d) { return d.parent === rootZC ? "inline" : "none"; })
-      .text(function(d) {if(d.name!=="undefined") {return d.name;} else {return "click to start";} });
+      .text(function(d) {
+          if(d.name!=="undefined") {return d.name;} //text is the country
+          else {return "click to start";} }); //or click to start at the very first step
     
     var node = svg.selectAll("circle,text");   
 
-    circle.on("mousemove", mousemove)
-        .on("mouseout", mouseout);
+    circle.on("mousemove", mousemove) //add a tooltip on mouse hover that shows name, size and growth of the hovered country
+        .on("mouseout", mouseout); //hide tooltip on mouse out
 
     d3.select("body").selectAll("g, #chart") //click on ZC and TM
         .on("click", function() {
-            resetFilter("ZC");
-            here=zoomHere();zoom(here); }); 
+            here=zoomHere(); //define the place to zoom (according to Filter)
+            if(here.name!=="flare"){zoom(here);} //zoom at this place (except if return on biggest element, to return to continent and not to "click to start")
+            else{zoom(here.children[0]);} }); 
         
     d3.selectAll(".state").on("click", function() {  //click on map
-            resetFilter("all");
+            resetFilter("all"); //reset Filter and apply new
             setFilter(event.path[0].__data__, "Carte");
-            here=zoomHere(); zoom(here); });
+            here=zoomHere(); //zoom at the place defined by Filter (if return to zero, go one children lower to display continents name and not "click to start")
+            if(here.name!=="flare"){zoom(here);}
+            else{zoom(here.children[0]);}  });
         
         
         //click table
     $("#refresh_jqGrid").on("click", function(){ //refresh button of jqGrid
         resetFilter("all");
-        
         var object=new Object;
         object.name="undefined";
         object.depth=1;
         Filter=[];
         Filter.push(object);
-        
         here=zoomHere();zoom(here);
     }); 
     
     $('#change').bind("DOMSubtreeModified",function(){  //Search by grid Filter
-        document.getElementById("change").innerHTML="";
         here=zoomHere(); zoom(here);
+        document.getElementById("change").innerHTML=""; //reset "change" div
     });
     
 
 
-  zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]);
+  zoomTo([rootZC.x, rootZC.y, rootZC.r * 2 + margin]); //place to zoom
 
   function zoom(d) {
     var focus0 = focus; focus = d;
-var transition = d3.transition()
+var transition = d3.transition() //define transition
         .duration(750)
         .tween("zoom", function(d) {
             var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
@@ -1301,19 +1344,20 @@ var transition = d3.transition()
         });
         
     transition.selectAll("text")
-      .filter(function(d) {if(d!==undefined){ return d.parent === focus || this.style.display === "inline";} }) //remove parent name
-        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
-        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline";} }) //write children name)
+      .filter(function(d) {if(d!==undefined){ return d.parent === focus || this.style.display === "inline";} }) //remove parent names
+        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; }) 
+        .each("start", function(d) { if (d.parent === focus) {this.style.display = "inline";} }) //write children names
         .each("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
   }
 
-  function zoomTo(v) {
+  function zoomTo(v) { //translation to the good place of the ZC to zoom
     var k = diameter / v[2]; view = v;
     node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
     circle.attr("r", function(d) { return d.r * k; });
   }
    }
    
+   //return the new population in an area by the sum of population*growth for each country of the area //recursive function
     function sommeChildren(d)
     {
         var deltaChildren=0;
@@ -1342,7 +1386,8 @@ var transition = d3.transition()
         }
         return deltaChildren; //return number of inhabitant after growth
     }
-
+    
+    //same function than soomeChildren except that d.children is replaced by d._children
     function somme_Children(d)
     {
         var deltaChildren=0;
@@ -1375,6 +1420,8 @@ var transition = d3.transition()
    //---------------------------------------------------------------------------
    //                                                                           
    //                           legend
+   //               define the color of charts and 
+   //           middle color is changeable by drag and drop
    //                                                                          
    //---------------------------------------------------------------------------    
    function Legend()
@@ -1383,42 +1430,44 @@ var transition = d3.transition()
         .append("linearGradient")
         .attr("id", "linearGradient");
 
-    linearGradient.append("stop")
+    linearGradient.append("stop") //first color
         .attr("offset", "0%")
-        .attr("stop-color", "hsl(120,100%,50%)");
-      
-    linearGradient.append("stop")
-        .attr("offset","50%")
+        .attr("stop-color", "hsl(120,100%,50%)"); //green
+
+    var percent= ((middleLegend+1)/6)*100;
+    
+    linearGradient.append("stop")//middle color
+        .attr("offset", percent + "%")
         .attr("stop-color", "white");
 
-    linearGradient.append("stop")
+    linearGradient.append("stop")//last color
         .attr("offset", "100%")
-        .attr("stop-color", "hsl(0,100%,50%)");
+        .attr("stop-color", "hsl(0,100%,50%)"); //red
 
   var data=[-1,2,5];
   
   var dragLegend = d3.behavior.drag()
     .on("drag", function(){
         var mousepos=d3.mouse(this)[1];
-        if(d3.mouse(this)[0]<70 && d3.mouse(this)[0]>50)
+        if(d3.mouse(this)[0]<70 && d3.mouse(this)[0]>50) //if mouse on the legend rect! (color change is defined on rect mouse move, without this line, you could change value from wherever you want after draging but without color change)
         {
             changeLegend(mousepos);
         }
     });  
      
-  var legend = d3.select("#legend")
+  var legend = d3.select("#legend") //legend div
     .append("svg") 
     .attr("width", 70)
     .attr("height", 220);
 
-legend.append("rect")
+legend.append("rect") //legend rect (colored)
     .attr("x", -215)
     .attr("y", 50)
     .attr("width", 200)
     .attr("height", 20)
-    .attr("fill","url(#linearGradient")
-    .attr("transform", "rotate(-90)")
-    .attr("cursor",  "s-resize");
+    .attr("fill","url(#linearGradient") //color defined just before
+    .attr("transform", "rotate(-90)") //rotate : basic gradient is horizontal
+    .attr("cursor",  "s-resize"); //change cursor to indicate the user that he can change the value
  
 legend.call(dragLegend).attr("class", "legendZC");    
 
@@ -1427,11 +1476,19 @@ var textLegend = legend.selectAll("text")
     .enter()
     .append("text")
     .attr("x", 35)
-    .attr("y", function(d,i){return (220-(100*i));})
-    .text(function(d) {return d;});
+    .attr("y", function(d,i){
+        if(i!==1){return (220-(100*i));}
+        else{
+            return 220-percent*2;
+        }
+    })
+    .text(function(d, i) {
+        if(i!==1){return d;}
+        else{return middleLegend;}
+    });
  
-function changeLegend(mousepos){
-
+function changeLegend(mousepos){ //append on mouse drag
+ //define a new linear grad to replace the previous one
     var linearGradient = svg.append("defs")
         .append("linearGradient")
         .attr("id", "linearGradient");
@@ -1444,7 +1501,7 @@ function changeLegend(mousepos){
         .attr("offset",  position(mousepos)+ "%")
         .attr("stop-color", "white");
 
-    function position(position){var a=-position+215; a=a/2; return a;}
+    function position(position){var a=-position+215; a=a/2; return a;} //position is linked to the position of pointer, and return percentage from the 0 (here : size 200-> size/2 to have a percent)
 
     linearGradient.append("stop")
         .attr("offset", "100%")
@@ -1455,34 +1512,34 @@ legend.append("rect")
     .attr("y", 50)
     .attr("width", 200)
     .attr("height", 20)
-    .attr("fill","url(#linearGradient")
-    .attr("transform", "rotate(-90)")
-    .attr("cursor",  "s-resize");
+    .attr("fill","url(#linearGradient") //fill with the new colors
+    .attr("transform", "rotate(-90)") //rotate : basic gradient is horizontal
+    .attr("cursor",  "s-resize"); 
     
-    textLegend.remove();
+    textLegend.remove(); //remouve text before writting the new one
     
-    textLegend = legend.selectAll("text")
+    textLegend = legend.selectAll("text") //writting the new text
     .data(data)
     .enter()
     .append("text")
     .attr("x", 35)
     .attr("y", function(d,i){
-        if(i===1)
+        if(i===1) //changed value : position depending on cursor position
         {
             return mousepos+5;
         }
-        else    {return 220-(100*i);}})
+        else    {return 220-(100*i);}}) //else : original values
     .text(function(d,i) {
-        if(i===1)
+        if(i===1) //changed value : text depending on cursor position
             {
                 if(mousepos>15 && mousepos<215)
                 {
-                    middleLegend=(-mousepos+215)*6/200-1;
-                    return middleLegend.toFixed(2);
+                    middleLegend=(-mousepos+215)*(d3.max(data)-d3.min(data))/200+d3.min(data); // +215 to have something between 0 and 200 // *(max-min)/200 : to adapt to size of the rect : values are now between 0 and "size of my interval" // +min: we had something betweem 0 and "size of interval", now between min and max 
+                    return middleLegend.toFixed(2); //2 decimal values
                 }
                 else {}
             }
-        else{return d;} }); 
+        else{return d;} }); //if non changed value, return original values
     }
 }
    
@@ -1511,8 +1568,11 @@ legend.append("rect")
               else{ //if the mouse hover something that doesn't have e value (the map, because it is created thanks an other file)
                   for(i=0; i<res.length; i++)
                   {
+                      if(NonHierarchy.length>1){
                       if (d.properties.name===res[i][NonHierarchy[NonHierarchy.length-2]]) //compare 2 files and bring value
-                      {return res[i].value.toLocaleString();}
+                      {return res[i].value.toLocaleString();}}
+                      else{if (d.properties.name===res[i][Hierarchy[Hierarchy.length-1]]) //compare 2 files and bring value
+                      {return res[i].value.toLocaleString();}}
                   }
                   return d.id;
               }
@@ -1722,7 +1782,9 @@ legend.append("rect")
                     if(Hierarchy[j]===data.rules[i].field)
                     {object.depth=j;}
                 }
-                if(data.rules[i].field===NonHierarchy[NonHierarchy.length-2]){object.depth=Hierarchy.length;}
+                if(NonHierarchy.length>1){
+                if(data.rules[i].field===NonHierarchy[NonHierarchy.length-2]){object.depth=Hierarchy.length;}}
+                else{if(data.rules[i].field===Hierarchy[Hierarchy.length-1]){object.depth=Hierarchy.length;}}
                 FilterGrid.push(object);
             }
             var maxdepth=0; 
@@ -1751,7 +1813,10 @@ legend.append("rect")
             var part; //select the good level of hierarchy : the deepest choosed by the user in normal situation
                       //the one just before if selection is too selective (because two elements are not selected)
             if(maxdepth>=Hierarchy.length)
-                {part=NonHierarchy[NonHierarchy.length-2];}
+                {
+                    if(NonHierarchy.length>1){part=NonHierarchy[NonHierarchy.length-2];}
+                    else{part=Hierarchy[Hierarchy.length-1];}
+                }
             else{part=Hierarchy[maxdepth];}
 
             var save; //is one element that match with expectation 
@@ -1790,7 +1855,7 @@ legend.append("rect")
     //Filter is set
     
     //each time the Filter is changed,
-    //we adapt colors a coutry if filter is very selectiv
+    //we adapt colors of one country if filter is very selectiv
 
     if(FilterCarte.length>Hierarchy.length) 
         {
