@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="joint.css" />
+            <script src="jquery.min.js"></script>
+            <script src="lodash.min.js"></script>
+            <script src="backbone-min.js"></script>
+            <script src="joint.js"></script>
+            <script src="/papaParse.js"></script>
+    </head>
+    
+    
+    <body>
+    <style>
+        
+        #progress_bar {
+            margin: 10px 0;
+            padding: 3px;
+            border: 1px solid #000;
+            font-size: 14px;
+            clear: both;
+            opacity: 0;
+            -moz-transition: opacity 1s linear;
+            -o-transition: opacity 1s linear;
+            -webkit-transition: opacity 1s linear;
+          }
+        #progress_bar.loading {
+            opacity: 1.0;
+          }
+        #progress_bar .percent {
+            background-color: #99ccff;
+            height: auto;
+            width: 0;
+          }
+        #data, #myholder, #draw{
+            float:left;
+        }
+       
+        #data{
+            width:15%;
+            height:100%;
+            background-color: blue;
+        }
+        
+        #myholder{
+            width:60%;
+            height:100%;
+        }
+
+        #draw{
+            
+        }
+        .link-tools .tool-remove { display: none }
+    </style>
+    <div id="data">
+        <div id="levels"></div>
+        <div id="metrics"></div>
+    </div>
+    <div id="myholder">    
+    <input type="file" id="files" name="file" />
+    <button onclick="abortRead();">Cancel read</button>
+    <div id="progress_bar"><div class="percent">0%</div></div>
+        
+    </div> 
+    <div id="draw"></div>
+    
+
+        
+<script type="text/javascript">
+    
+  var reader;
+  var progress = document.querySelector('.percent');
+
+  function abortRead() {
+    reader.abort();
+  }
+
+  function errorHandler(evt) {
+    switch(evt.target.error.code) {
+      case evt.target.error.NOT_FOUND_ERR:
+        alert('File Not Found!');
+        break;
+      case evt.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case evt.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    };
+  }
+
+  function updateProgress(evt) {
+    // evt is an ProgressEvent.
+    if (evt.lengthComputable) {
+      var percentLoaded = Math.round((evt.loaded / evt.total) * 100);
+      // Increase the progress bar length.
+      if (percentLoaded < 100) {
+        progress.style.width = percentLoaded + '%';
+        progress.textContent = percentLoaded + '%';
+      }
+    }
+  }
+
+  function handleFileSelect(evt) {
+    // Reset progress indicator on new file selection.
+    progress.style.width = '0%';
+    progress.textContent = '0%';
+
+    reader = new FileReader();
+    reader.onerror = errorHandler;
+    reader.onprogress = updateProgress;
+    reader.onabort = function(e) {
+      alert('File read cancelled');
+    };
+    reader.onloadstart = function(e) {
+      document.getElementById('progress_bar').className = 'loading';
+    };
+    reader.onload = function(e) {
+      // Ensure that the progress bar displays 100% at the end.
+      progress.style.width = '100%';
+      progress.textContent = '100%';
+      setTimeout("document.getElementById('progress_bar').className='';", 2000);
+    };
+    reader.onloadend = function(e){start(reader.result);};
+
+    // Read in the image file as a binary string.
+    reader.readAsBinaryString(evt.target.files[0]);
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    
+    
+    function start(file)
+    {
+        console.log(file);
+        var filep = $.parseXML(file);
+        console.log(filep);
+        var nbr_column=5;
+        var width=200*nbr_column, height=1000;
+
+        var graph = new joint.dia.Graph; //define a graph
+        var paper = new joint.dia.Paper({ //define a paper
+          el: $('#myholder'),
+          width: width,
+          height: height,
+          gridSize: 1,
+          model: graph, //include paper in my graph
+          restrictTranslate: function(element) { //restriction of drag n drop to the vertical line (x never changes)
+            return {
+              x: element.model.attributes.position.x, //this represent the original x position of my element
+              y: 0,
+              width: 0,
+              height: height
+            };
+          }
+        });
+
+        for(i=0; i<nbr_column; i++)
+        {
+            var line = V('line', { x1: 200*(i+1)+50, y1: 10, x2:200*(i+1)+50, y2: 500, stroke: '#ddd' });
+            V(paper.viewport).append(line);
+        }
+
+        var rect1 = new joint.shapes.basic.Rect({ //create first rect (with input and output)
+            position: { x: 100, y: 20 },
+            size: { width: 90, height: 90 },
+            attrs: {
+                rect: { fill: '#2ECC71' }
+            }
+        });
+
+        var add_block= new joint.shapes.basic.Circle({ //create add button
+            position: { x: 170, y: 20 },
+            size: { width: 20, height: 20 },
+            attrs: {
+                circle: { fill: '#2ECC71'},
+                text:{text:'+', "font-size":20}
+            }
+        });
+
+        var del_block= new joint.shapes.basic.Circle({ //create add button
+            position: { x: 100, y: 20 },
+            size: { width: 20, height: 20 },
+            attrs: {
+                circle: { fill: '#2ECC71'},
+                text:{text:'x', "font-size":20}
+            }
+        });
+
+        rect1.embed(add_block);    
+        rect1.embed(del_block);    
+
+        graph.addCell([rect1,add_block, del_block]);
+
+
+
+
+        //Create a new block and link between two blocks
+        //chek if click on + button
+        //if click on this button, create a new block and link between them
+
+        paper.on('cell:pointerclick', function(cellView, evt, x, y) { 
+            var elementBelow = graph.get('cells').find(function(cell) { //search add block button
+                if (cell instanceof joint.shapes.basic.Rect) return false;//not interested in rect
+                if (!cell.get('parent')) return false;//not interested in parent
+                if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+                if (cell.getBBox().containsPoint(g.point(x, y))) {
+                    return true;
+                }
+                return false;
+            });
+
+            if(elementBelow.attributes.attrs.text.text==="+") //click on button "add block" //add a block
+            {
+                rect=elementBelow.getAncestors()[0].clone();
+                add=add_block.clone();
+                del=del_block.clone();
+                rect.embed(add);
+                rect.embed(del);
+                elementBelow.getAncestors()[0].embed(rect);
+                var link = new joint.dia.Link({
+                    source: { id : elementBelow.getAncestors()[0].id},
+                    target: { id : rect.id },
+                    attrs: {}
+                });
+                link.attr({
+                    '.connection': { stroke: '#222138' },
+                    '.marker-source': { fill: '#31d0c6', stroke: 'none', d: 'M 10 0 L 0 5 L 10 10 z' },
+                    '.marker-target': { fill: '#fe854f', stroke: '#7c68fc', d: 'M 10 0 L 0 5 L 10 10 z' }
+                });
+                graph.addCell([rect, add, del, link]);
+
+                rect.position(130+cellView.getBBox().x, cellView.getBBox().y);
+                add.position(cellView.getBBox().x+200, cellView.getBBox().y);
+                del.position(cellView.getBBox().x+130, cellView.getBBox().y);
+            }
+            if(elementBelow.attributes.attrs.text.text==="x")
+            {
+                elementBelow.getAncestors()[0].remove();
+            }        
+        });
+
+        paper.on('cell:pointerdown', function(cellView, evt, x, y) { //don't move plus buton
+            var elementBelow = graph.get('cells').find(function(cell) {
+                if (cell instanceof joint.shapes.basic.Rect) return false;//not interested in rect
+                if (!cell.get('parent')) return false;//not interested in parent
+                if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+                if (cell.getBBox().containsPoint(g.point(x, y))) {
+                    return true;
+                }
+                return false;
+            });
+
+            if(elementBelow)
+            {
+                paper.findViewByModel(cellView.model).options.interactive = false;
+            }
+        });
+    }
+
+</script>
+    </body>
+</html>

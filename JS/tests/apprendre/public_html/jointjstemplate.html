@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="joint.css" />
+            <script src="jquery.min.js"></script>
+            <script src="lodash.min.js"></script>
+            <script src="backbone-min.js"></script>
+            <script src="joint.js"></script>
+    </head>
+    
+    
+    <body>
+    <style>
+        #data{
+            width:60px;
+        }
+        #data #tree #draw{
+            float: left;
+        }
+        #L_one{
+            margin:auto;    
+            position: relative;
+            left: 100px;
+        }
+    </style>
+    <div id="data">
+        <div id="levels"></div>
+        <div id="metrics"></div>
+    </div>
+    <div id="myholder"></div> 
+    <div id="draw"></div>
+        
+<script type="text/javascript">
+    var width=400, height=1000;
+
+    var graph = new joint.dia.Graph; //define a graph
+    var paper = new joint.dia.Paper({ //define a paper
+      el: $('#myholder'),
+      width: width,
+      height: height,
+      gridSize: 1,
+      model: graph, //include paper in my graph
+      restrictTranslate: function(element) { //restriction of drag n drop to the vertical line (x never changes)
+        return {
+          x: element.model.attributes.position.x, //this represent the original x position of my element
+          y: 0,
+          width: 0,
+          height: height
+        };
+      }
+    });
+
+    var rect1 = new joint.shapes.basic.Rect({ //create first rect (with input and output)
+        position: { x: 100, y: 20 },
+        size: { width: 90, height: 90 },
+        attrs: {
+            rect: { fill: '#2ECC71' }
+        }
+    });
+
+    graph.addCell([rect1]);
+    
+    var rect2=rect1.clone();
+    rect2.translate(0,300);
+    var rect3=rect1.clone();
+    rect3.translate(200,0);
+    var rect4=rect3.clone();
+    rect4.translate(0,300);
+
+    graph.addCell([rect2,rect3, rect4]);
+
+    var line = V('line', { x1: 250, y1: 10, x2: 250, y2: 500, stroke: '#ddd' });
+    V(paper.viewport).append(line);
+
+
+    //Create link between two blocks
+    //on pointerdown : if click on rect : memorize clicked block
+    //on pointerup : if up on block : memorize block below
+    //create a link between the 2 blocks.
+    //During this operation, interactivity is stopped.
+    var link_border = []; //get the two blocks that the user wants to link 
+    var link;
+    var drawing=false; //define if we are drawing an arrow or not
+
+    paper.on('cell:pointerdown', function(cellView, evt, x, y) { //start to draw an arrow
+        link_border = [];
+        var elementBelow = graph.get('cells').find(function(cell) {
+            if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+            if (cell.getBBox().containsPoint(g.point(x, y))) {
+                return true;
+            }
+            return false;
+        });
+
+        if(elementBelow) //if we start from a block, let's go!
+        {             
+            drawing=true;
+            link = new joint.dia.Link({});  // create the link between my two elements 
+            paper.findViewByModel(cellView.model).options.interactive = false; //block interactivity
+            link_border[0]=cellView.model.id;
+        }
+    });
+
+    paper.on('cell:pointermove', function(cellView, evt, x, y) {
+        if(drawing===true)
+        {
+            link.prop({
+                source: { id: link_border[0]},
+                target: { x:x , y:y }});
+                graph.addCell(link);
+        }
+    });    
+
+    paper.on('cell:pointerup', function(cellView, evt, x, y) {
+        if(drawing===true){
+            
+            var elementBelow = graph.get('cells').find(function(cell) {// Find the first element below that is not a link nor the dragged element itself.
+             //   if (!cell.get('parent')) return false;//not interested in subrect
+                if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+                if (cell.id === cellView.model.id) return false; // The same element as the dropped one.
+                if (cell.getBBox().containsPoint(g.point(x, y))) {
+                    return true;
+                }
+                return false;
+            });
+
+            if(elementBelow)
+            {
+                link_border[1]=elementBelow.id;
+                link.prop({         // create the link between my two elements 
+                    source: { id: link_border[0]},
+                    target: { id: link_border[1]}
+                })
+                .attr({ //define attibutes (grey, start with blue arrow, end with a pink one)
+                    '.connection': { stroke: '#222138' },
+                    '.marker-source': { fill: '#31d0c6', stroke: 'none', d: 'M 10 0 L 0 5 L 10 10 z' },
+                    '.marker-target': { fill: '#fe854f', stroke: '#7c68fc', d: 'M 10 0 L 0 5 L 10 10 z' }
+                });
+                graph.addCell(link);
+                paper.findViewByModel(cellView.model).options.interactive = true;
+                drawing=false;
+            }
+            else {
+                drawing=false;
+                link.remove(); //case : link between a block and nothing
+            }
+        }
+
+    });
+    
+    
+    
+    //create a 
+    paper.on('cell:pointerdblclick', function(cellView, evt, x, y) //on double click, add a block under the block
+    {
+        var elementBelow = graph.get('cells').find(function(cell) {
+            if (!cell.get('parent')) return false;//not interested in parent
+            if (cell instanceof joint.dia.Link) return false; // Not interested in links.
+            if (cell.getBBox().containsPoint(g.point(x, y))) {
+                return true;
+            }
+            return false;
+        });
+        console.log(elementBelow);
+        if(elementBelow===undefined); 
+            {
+                var rect=cellView.model.clone();
+                rect.translate(0,100);
+
+
+                //rect1.embed(subrect1);
+                //rect1.embed(subrect2);
+                graph.addCell(rect);
+            }
+        
+    });
+
+</script>
+    </body>
+</html>
